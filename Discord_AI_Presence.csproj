@@ -8,7 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Text_WebUI\Presets\Preset Files\**" />
+    <EmbeddedResource Remove="Text_WebUI\Presets\Preset Files\**" />
+    <None Remove="Text_WebUI\Presets\Preset Files\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Discord\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NUnit" Version="4.0.1" />
   </ItemGroup>
 
 </Project>
