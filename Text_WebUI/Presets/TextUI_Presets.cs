@@ -10,6 +10,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         public PresetData? CurPreset { get; private set; }
         private const string DefaultPreset = "Default.json";
         private const string GlobalPreset = "GlobalPreset.json";
+        private readonly string DefaultDirectory;
         public enum PresetEnum
         {
             Asterism,
@@ -43,8 +44,10 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
             Yara
         }
 
-        public TextUI_Presets()
+        public TextUI_Presets(string defaultDirectory = "")
         {
+            string solutionDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, defaultDirectory);
+            DefaultDirectory = Path.Combine(solutionDirectory, "Text_WebUI\\Presets\\Preset_Files");
             ChangePreset(PresetEnum.Default);
         }
 
@@ -68,7 +71,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         {
             var di = new DirectoryInfo(PresetsLocation());
             var files = di.GetFiles();
-            var fileContent = files.First(file => file.Name.Equals(filename, StringComparison.OrdinalIgnoreCase) || 
+            var fileContent = files.First(file => file.Name.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
             file.Name.Equals(DefaultPreset, StringComparison.OrdinalIgnoreCase));
             return File.ReadAllText(fileContent.FullName);
         }
@@ -78,7 +81,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        private string PresetsLocation(string filename = "")
+        public virtual string PresetsLocation(string filename = "")
         {
             return $@"{Environment.CurrentDirectory}\Text_WebUI\Presets\Preset_Files\{filename}";
         }
