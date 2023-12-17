@@ -71,7 +71,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         /// <summary>
         /// Fetches a json file and returns it as a string
         /// </summary>
-        /// <param name="filename">Include the json extension</param>
+        /// <param name="filename">Do not include the json extension or special characters</param>
         /// <returns>The contents of the file</returns>
         private string PresetFiles(string filename)
         {
