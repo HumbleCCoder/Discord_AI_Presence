@@ -4,10 +4,10 @@ namespace UnitTesting
 {
     internal class PresetTestingHelper : TextUI_Presets
     {
-        public override string PresetsLocation(string filename = "")
+        protected override string PresetsLocation(string filename = "")
         {
             string solutionDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..");
-            return Path.Combine(solutionDirectory, "Text_WebUI\\Presets\\Preset_Files", filename).Replace("UnitTesting", string.Empty);
+            return Path.Combine(solutionDirectory, @"bin\Debug\net7.0\TextUI_Files\Preset_Files").Replace("UnitTesting", string.Empty);
         }
     }
     internal class TEST_TextUI_Presets

@@ -1,4 +1,6 @@
-﻿namespace Discord_AI_Presence
+﻿using Discord_AI_Presence.Text_WebUI;
+
+namespace Discord_AI_Presence
 {
     internal class Program
     {

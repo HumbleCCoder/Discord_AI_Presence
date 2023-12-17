@@ -7,10 +7,14 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
     public class TextUI_Presets
     {
         [JsonProperty]
-        public PresetData? CurPreset { get; private set; }
-        private const string DefaultPreset = "Default.json";
+        public PresetData? CurPreset { get; set; }
+
+        /* Global presets are presets that don't impact the weights of the neuronet.
+         * They impact the output after the weights have been set.*/
         private const string GlobalPreset = "GlobalPreset.json";
-        private readonly string DefaultDirectory;
+
+        /* Enum represents the exact filenames of each weight preset for easy searching.
+         * But also necessary for the Discord slash command later to let the user choose presets.*/
         public enum PresetEnum
         {
             Asterism,
@@ -44,13 +48,15 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
             Yara
         }
 
-        public TextUI_Presets(string defaultDirectory = "")
+        public TextUI_Presets()
         {
-            string solutionDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, defaultDirectory);
-            DefaultDirectory = Path.Combine(solutionDirectory, "Text_WebUI\\Presets\\Preset_Files");
             ChangePreset(PresetEnum.Default);
         }
 
+        /// <summary>
+        /// Merges the global presets with the neuronet presets, then assigns it as the current preset.
+        /// </summary>
+        /// <param name="presetType"></param>
         public void ChangePreset(PresetEnum presetType)
         {
             var preset = JObject.Parse(PresetFiles(presetType.ToString()));
@@ -65,25 +71,25 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         /// <summary>
         /// Fetches a json file and returns it as a string
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
+        /// <param name="filename">Include the json extension</param>
+        /// <returns>The contents of the file</returns>
         private string PresetFiles(string filename)
         {
-            var di = new DirectoryInfo(PresetsLocation());
-            var files = di.GetFiles();
-            var fileContent = files.First(file => file.Name.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
-            file.Name.Equals(DefaultPreset, StringComparison.OrdinalIgnoreCase));
-            return File.ReadAllText(fileContent.FullName);
+            return File.ReadAllText(PresetsLocation(filename));
         }
 
         /// <summary>
-        /// Fetch the location of the preset files. Specify filename to get a specific file.
+        /// Fetch the location of the preset files.
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public virtual string PresetsLocation(string filename = "")
+        /// <param name="filename">Search for a file. Do not include the file extension or special characters.</param>
+        /// <returns>The file directory or the file itself if a filename is specified</returns>
+        protected virtual string PresetsLocation(string filename = "")
         {
-            return $@"{Environment.CurrentDirectory}\Text_WebUI\Presets\Preset_Files\{filename}";
+            if (!filename.IsSafePath())
+                filename = string.Empty;
+            else
+                filename = string.Concat(filename, ".json");
+            return $@"{Environment.CurrentDirectory}\TextUI_Files\Preset_Files\{filename}";
         }
     }
 }
