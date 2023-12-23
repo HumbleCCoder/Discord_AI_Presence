@@ -71,7 +71,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         /// Fetches a json file and returns it as a string
         /// </summary>
         /// <param name="file">The type of Preset File</param>
-        /// <param name="returnOnlyLocation">If you only wile the file path without the file itself</param>
+        /// <param name="returnOnlyLocation">If you only want the file path without the file itself</param>
         /// <returns>Either the path or the contents of the file</returns>
         private string PresetFiles(PresetEnum file, bool returnOnlyLocation = false)
         {
@@ -79,7 +79,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
             {
                 return PresetsLocation;
             }
-            return File.ReadAllText(@$"{PresetsLocation}{file}.json");
+            return File.ReadAllText($"{PresetsLocation}{file}.json");
         }        
     }
 }
