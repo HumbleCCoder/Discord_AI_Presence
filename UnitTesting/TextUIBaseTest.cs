@@ -9,7 +9,7 @@ namespace UnitTesting
 {
     internal class HelperClass : TextUI_Base
     {
-        
+
     }
     internal class TextUIBaseTest
     {
@@ -17,6 +17,16 @@ namespace UnitTesting
         public void ConstructorTest()
         {
             Assert.That(TextUI_Base.GetInstance().Presets != null);
+        }
+    }
+
+    internal class ProfileTests
+    {
+        [Test]
+        public void CharacterJsonTest()
+        {
+            Assert.That(TextUI_Base.GetInstance().Cards, Is.Not.Empty);
+            Assert.That(TextUI_Base.GetInstance().Cards.ElementAt(0).Value.CharacterName, Is.Not.Empty);
         }
     }
 }

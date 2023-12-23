@@ -10,10 +10,13 @@ using System.Threading.Tasks;
 
 namespace Discord_AI_Presence.Text_WebUI
 {
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class TextUI_Base
     {
+        [JsonProperty]
         public TextUI_Presets Presets { get; init; }
-        public Dictionary<string, ProfileReader> Cards { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public Dictionary<string, ProfileData> Cards { get; } = new(StringComparer.OrdinalIgnoreCase);
         private static TextUI_Base _instance = null!;
         private static readonly object _lock = new();
 
@@ -46,7 +49,7 @@ namespace Discord_AI_Presence.Text_WebUI
         /// </summary>
         /// <param name="charFirstName">Search only by the character's first name</param>
         /// <returns>Returns null if nothing found.</returns>
-        public static ProfileReader? MatchName(string charFirstName)
+        public static ProfileData? MatchName(string charFirstName)
         {
             if (GetInstance().Cards.TryGetValue(charFirstName, out var charData))
             {
@@ -62,11 +65,11 @@ namespace Discord_AI_Presence.Text_WebUI
             if (!filename.IsSafePath())
                 filename = string.Empty;
             else
-                filename = string.Concat(filename, ".json");
-            return $@"{Environment.CurrentDirectory}\TextUI_Files\AiProfileCards\{filename}";
+                filename = string.Concat("\\", filename, ".json");
+            return $@"{Environment.CurrentDirectory}\TextUI_Files\AiProfileCards{filename}";
         }
 
-        // Character files stored in a folder using json format are grabbed and deserialized into the ProfileReader data class.
+        // Character files stored in a folder using json format are grabbed and deserialized into the ProfileData data class.
         private void PopulateProfileDictionary()
         {
             var di = new DirectoryInfo(ProfileLocation());
@@ -74,7 +77,7 @@ namespace Discord_AI_Presence.Text_WebUI
             foreach (var files in fi)
             {
                 var fileData = File.ReadAllText(files.FullName);
-                var jsonData = JsonConvert.DeserializeObject<ProfileReader>(fileData);
+                var jsonData = JsonConvert.DeserializeObject<ProfileData>(fileData);
                 if (jsonData != null)
                     Cards.Add(jsonData.CharacterName, jsonData);
             }
