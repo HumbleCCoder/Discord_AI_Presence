@@ -8,7 +8,6 @@ namespace UnitTesting
         [Test]
         public void TestPresetLocation()
         {
-            Assert.That(TextUI_Base.GetInstance().Presets.CurPreset!.do_sample, Is.True);
         }
     }
 }

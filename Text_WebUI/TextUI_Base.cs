@@ -1,12 +1,6 @@
-﻿using Discord_AI_Presence.Stable_Diffusion;
-using Discord_AI_Presence.Text_WebUI.Presets;
+﻿using Discord_AI_Presence.Text_WebUI.DiscordStuff;
 using Discord_AI_Presence.Text_WebUI.ProfileScripts;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Discord_AI_Presence.Text_WebUI
 {
@@ -14,18 +8,29 @@ namespace Discord_AI_Presence.Text_WebUI
     public class TextUI_Base
     {
         [JsonProperty]
-        public TextUI_Presets Presets { get; init; }
-
+        public List<TextUI_Servers> ServerData { get; init; } = [];
         public Dictionary<string, ProfileData> Cards { get; } = new(StringComparer.OrdinalIgnoreCase);
         private static TextUI_Base _instance = null!;
         private static readonly object _lock = new();
 
-
         public TextUI_Base()
-        {
-            Presets = new TextUI_Presets();
+        {            
             PopulateProfileDictionary();
-        }   
+        }
+
+        [JsonConstructor]
+        public TextUI_Base(List<TextUI_Servers> ServerData)
+        {
+            this.ServerData = ServerData;
+            _instance = this;
+        }
+
+        public ProfileData GetAI(string name)
+        {
+            if (!Cards.TryGetValue(name, out ProfileData value))
+                return null;
+            return value;
+        }
         
         /// <summary>
         /// Singleton instance to use whenever data needs to be read for the Text AI
@@ -49,7 +54,7 @@ namespace Discord_AI_Presence.Text_WebUI
         /// </summary>
         /// <param name="charFirstName">Search only by the character's first name</param>
         /// <returns>Returns null if nothing found.</returns>
-        public static ProfileData? MatchName(string charFirstName)
+        public static ProfileData MatchName(string charFirstName)
         {
             if (GetInstance().Cards.TryGetValue(charFirstName, out var charData))
             {
@@ -59,7 +64,11 @@ namespace Discord_AI_Presence.Text_WebUI
             return null;
         }
 
-        // Location of character profile cards using the datapath
+        /// <summary>
+        /// Location of character profile cards using the datapath
+        /// </summary>
+        /// <param name="filename">Do not add any special characters or the file extension</param>
+        /// <returns></returns>
         protected virtual string ProfileLocation(string filename = "")
         {
             if (!filename.IsSafePath())

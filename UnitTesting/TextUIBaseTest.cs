@@ -11,14 +11,6 @@ namespace UnitTesting
     {
 
     }
-    internal class TextUIBaseTest
-    {
-        [Test]
-        public void ConstructorTest()
-        {
-            Assert.That(TextUI_Base.GetInstance().Presets != null);
-        }
-    }
 
     internal class ProfileTests
     {

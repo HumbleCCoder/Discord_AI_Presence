@@ -11,11 +11,13 @@
         /// Discord static user ID. Will be useful in case a more specific search is required.
         /// </summary>
         public ulong UserID { get; init; }
-        public Memory(string message, string name, ulong userID) =>
-            (Message, Name, UserID) = (message, name, userID);
+        public ulong MsgID { get; init; }
+        public Memory(string Message, string Name, ulong UserID, ulong MsgID) =>
+            (this.Message, this.Name, this.UserID, this.MsgID) = (Message, Name, UserID, MsgID);
 
         /// <summary>
         /// Edits the message. Edit messaging is pretty standard practice due to how AI can frequently send unwanted messages in an otherwise good reply.
+        /// Does not edit the message on Discord.
         /// </summary>
         /// <param name="message">The message to edit.</param>
         public void EditMessage(string message) => Message = message;

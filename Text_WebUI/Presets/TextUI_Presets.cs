@@ -6,27 +6,24 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class TextUI_Presets
     {
-        [JsonProperty]
-        public PresetData? CurPreset { get; set; }
+        public PresetData CurPreset { get; set; }
         private readonly string PresetsLocation = $@"{Environment.CurrentDirectory}\TextUI_Files\Preset_Files\";
         /* Global presets are presets that don't impact the weights of the neuronet.
          * They impact the output after the weights have been set.*/
-        private const string GlobalPreset = "GlobalPreset";
 
         /* Enum represents the exact filenames of each weight preset for easy searching.
-         * But also necessary for the Discord slash command later to let the user choose presets.*/
+         * But also necessary for the Discord slash command later to let the user choose presets.
+         * Discord only allows 25 maximum presets in the choices for a slash command. Had to cut some presets.
+         */
         public enum PresetEnum
         {
             Asterism,
             BeamSearch,
             BigO,
             ContrastiveSearch,
-            Default,
             Deterministic,
             DivineIntellect,
             Global,
-            KoboldGodlike,
-            KoboldLiminalDrift,
             LLaMaPrecise,
             MidnightEnigma,
             Mirostat,
@@ -49,7 +46,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
 
         public TextUI_Presets()
         {
-            ChangePreset(PresetEnum.Default);
+            ChangePreset(PresetEnum.UniversalLight);
         }
 
         /// <summary>
@@ -59,7 +56,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         public void ChangePreset(PresetEnum presetType)
         {
             var preset = JObject.Parse(PresetFiles(presetType));
-            var globalPreset = JObject.Parse(PresetFiles(presetType));
+            var globalPreset = JObject.Parse(PresetFiles(PresetEnum.Global));
             preset.Merge(globalPreset, new JsonMergeSettings
             {
                 MergeArrayHandling = MergeArrayHandling.Union
