@@ -19,6 +19,7 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
         /// </summary>
         public List<Chats> AIChats { get; init; } = [];
 
+        public Chats FindChat(ulong channeID) => AIChats.FirstOrDefault(x => x.ChannelID == channeID);
 
         public void ChangeSettings(Settings newSettings) => ServerSettings = newSettings;
         /// <summary>

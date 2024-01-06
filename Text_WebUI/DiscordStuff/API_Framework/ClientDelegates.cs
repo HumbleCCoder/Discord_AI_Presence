@@ -51,6 +51,8 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
             if (_message == null)
                 return;
             _context = new SocketCommandContext(_client, _message);
+            if (_context.User.IsBot)
+                return;
             var aiProfile = TextUI_Base.GetInstance().Check(_message.Content);
             if (aiProfile != null)
                 return;
@@ -60,7 +62,16 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
                 serverData.EndChat(aiProfile.NickOrName());
                 return;
             }
-            TextUI_Base.GetInstance().StartChat(_context, aiProfile.NickOrName());
+            // If a new chat is not started but it detects a current AI chat in progress, it will add to the chat memory instead.
+            await TextUI_Base.GetInstance().StartChat(_context, aiProfile.NickOrName());
+            if(serverData.ServerSettings.AllowRandomAIOccurance)
+            {
+                bool shouldReply = Extensions.ReturnRandom(0, 100) > 95 && Extensions.ReturnRandom(0, 100) > 96;
+                if (shouldReply)
+                {
+
+                }
+            }
         }
     }
 }

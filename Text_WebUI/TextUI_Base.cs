@@ -1,6 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using Discord_AI_Presence.Text_WebUI.DiscordStuff;
+using Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework;
 using Discord_AI_Presence.Text_WebUI.Instructions;
 using Discord_AI_Presence.Text_WebUI.Presets;
 using Discord_AI_Presence.Text_WebUI.ProfileScripts;
@@ -18,6 +19,7 @@ namespace Discord_AI_Presence.Text_WebUI
         public List<TextUI_Servers> ServerData { get; init; } = [];
         public Dictionary<string, ProfileData> Cards { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Queues NeuroNetCalls { get; init; } = new();
+        public Webhooks Webhooks { get; init; }
         private static TextUI_Base _instance = null;
         private static readonly object _lock = new();
 
@@ -43,18 +45,34 @@ namespace Discord_AI_Presence.Text_WebUI
         /// </summary>
         /// <param name="scc">The socket command context assigned whenever a message is received on Discord.</param>
         /// <param name="profile">The character name</param>
-        public void StartChat(SocketCommandContext scc, string characterName)
+        public async Task StartChat(SocketCommandContext scc, string characterName)
         {
-            var findServer = ServerData.FirstOrDefault(x => x.ServerID == scc.Guild.Id);
-            if (findServer == null || findServer.ServerSettings.NoAIChannels.Exists(x => x == scc.Channel.Id))
+            var server = ServerData.FirstOrDefault(x => x.ServerID == scc.Guild.Id);
+
+            if (server == null || server.ServerSettings.NoAIChannels.Contains(scc.Channel.Id))
                 return;
-            if (findServer.AiChatExists(scc.Channel.Id))
+            if(server.AiChatExists(scc.Channel.Id))
+            {
+                var chat = server.FindChat(scc.Channel.Id);
+                chat?.AddMessage(scc.User.GlobalName ?? scc.User.Username, scc.Message.Content, scc.User.Id, scc.Message.Id);
                 return;
-            findServer.StartChat(new MemoryManagement.Chats(scc.Channel.Id,
-                findServer.ServerSettings.DefaultPreset,
+            }
+            if (!Cards.TryGetValue(characterName, out var profile))
+                return;
+
+            var chatSettings = new MemoryManagement.Chats(
+                scc.Channel.Id,
+                server.ServerSettings.DefaultPreset,
                 characterName,
-                Scenario.GetScenario(Scenario.ScenarioPresets.Chatbot, characterName), scc.User.Id));
+                Scenario.GetScenario(Scenario.ScenarioPresets.Chatbot, characterName),
+                scc.User.Id
+            );
+
+            server.StartChat(chatSettings);
+
+            await Webhooks.SendWebhookMessage(scc.Guild, profile, server.ServerSettings, profile.AllGreetings[0], scc.Channel.Id);
         }
+
 
         /// <summary>
         /// Starts a roleplay chat either with the default roleplay scenario or a custom scenario.
@@ -62,20 +80,24 @@ namespace Discord_AI_Presence.Text_WebUI
         /// <param name="scc">The socket command context assigned whenever a message is received on Discord.</param>
         /// <param name="characterName">The character name</param>
         /// <param name="customScenario">If no custom scenario specified, it will default to roleplay default.</param>
-        public void StartChat(SocketCommandContext scc, string characterName, string customScenario = "")
+        public async Task StartChat(SocketCommandContext scc, string characterName, string customScenario = "")
         {
-            var findServer = ServerData.FirstOrDefault(x => x.ServerID == scc.Guild.Id);
-            if (findServer == null || findServer.ServerSettings.NoAIChannels.Exists(x => x == scc.Channel.Id))
+            var server = ServerData.FirstOrDefault(x => x.ServerID == scc.Guild.Id);
+
+            if (server == null || server.ServerSettings.NoAIChannels.Contains(scc.Channel.Id) || server.AiChatExists(scc.Channel.Id))
                 return;
-            if (findServer.AiChatExists(scc.Channel.Id))
+
+            if (!Cards.TryGetValue(characterName, out var profile))
                 return;
-            findServer.StartChat(new MemoryManagement.Chats(scc.Channel.Id,
-                findServer.ServerSettings.DefaultPreset,
-                characterName,
-                //Checks if a custom scenario is specified otherwise defaults to roleplay.
-                string.IsNullOrEmpty(customScenario)
+
+            var preset = server.ServerSettings.DefaultPreset;
+            var scenario = string.IsNullOrEmpty(customScenario)
                 ? Scenario.GetScenario(Scenario.ScenarioPresets.Roleplay, characterName)
-                : Scenario.GetScenario(Scenario.ScenarioPresets.Default, characterName, customScenario), scc.User.Id));
+                : Scenario.GetScenario(Scenario.ScenarioPresets.Default, characterName, customScenario);
+
+            server.StartChat(new MemoryManagement.Chats(scc.Channel.Id, preset, characterName, scenario, scc.User.Id));
+
+            await Webhooks.SendWebhookMessage(scc.Guild, profile, server.ServerSettings, profile.AllGreetings[0], scc.Channel.Id);
         }
 
         [JsonConstructor]

@@ -6,8 +6,8 @@ namespace Discord_AI_Presence.Text_WebUI.TextWebUI
 {
     public interface ITextUIBase
     {        
-        public abstract void StartChat(SocketCommandContext scc, string characterName);
-        public abstract void StartChat(SocketCommandContext scc, string characterName, string customScenario = "");
+        public abstract Task StartChat(SocketCommandContext scc, string characterName);
+        public abstract Task StartChat(SocketCommandContext scc, string characterName, string customScenario = "");
         public abstract void PopulateServerData(List<SocketGuild> guilds);
         public abstract static TextUI_Base GetInstance();
         public abstract static ProfileData MatchName(string charFirstName);

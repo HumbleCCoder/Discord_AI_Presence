@@ -6,7 +6,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class TextUI_Presets
     {
-        public PresetData CurPreset { get; set; }
+        public JObject CurPreset { get; set; }
         private readonly string PresetsLocation = $@"{Environment.CurrentDirectory}\TextUI_Files\Preset_Files\";
         /* Global presets are presets that don't impact the weights of the neuronet.
          * They impact the output after the weights have been set.*/
@@ -57,11 +57,11 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
         {
             var preset = JObject.Parse(PresetFiles(presetType));
             var globalPreset = JObject.Parse(PresetFiles(PresetEnum.Global));
-            preset.Merge(globalPreset, new JsonMergeSettings
+            globalPreset.Merge(preset, new JsonMergeSettings
             {
                 MergeArrayHandling = MergeArrayHandling.Union
             });
-            CurPreset = JsonConvert.DeserializeObject<PresetData>(preset.ToString());
+            CurPreset = JsonConvert.DeserializeObject<JObject>(globalPreset.ToString());
         }
 
         /// <summary>

@@ -73,7 +73,6 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
             this.PresetName = PresetName;
             Presets.ChangePreset(PresetName);
             CharacterName = CharacterProfile.CharacterName;
-            CharacterProfile.ReplaceNames(CharacterProfile.NickOrName());
             Username = username;
             if (!string.IsNullOrEmpty(customScenario))
             {
@@ -98,14 +97,14 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         {
             StringBuilder sb = new();
             if (includeProfile)
-                sb.AppendLine(CharacterProfile.ProfileInfo());
+                sb.AppendLine(CharacterProfile.ProfileInfo(Username));
             foreach (var data in ChatHistory)
             {
                 sb.Append(data.Name).
                     Append(": ").
                     AppendLine(data.Message);
             }
-            return sb.ToString();
+            return sb.ToString().Replace("\r", string.Empty);
         }
 
         /// <summary>
@@ -117,14 +116,14 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         public override List<string> HistoryByCharacterLimit(bool includeProfile = false)
         {
             List<string> strings = [];
-            int total = (includeProfile) ? CharacterProfile.ProfileInfo().Length : 0;
+            int total = (includeProfile) ? CharacterProfile.ProfileInfo(Username).Length : 0;
             StringBuilder sb = new();
             foreach (var data in ChatHistory)
             {
                 string format = data.Format();
                 if (format.Length + sb.Length >= Discord_Character_Limit)
                 {
-                    total = (includeProfile) ? CharacterProfile.ProfileInfo().Length : 0;
+                    total = (includeProfile) ? CharacterProfile.ProfileInfo(Username).Length : 0;
                     strings.Add(sb.ToString());
                     sb.Clear();
                 }

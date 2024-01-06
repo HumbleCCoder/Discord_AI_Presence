@@ -1,4 +1,5 @@
-﻿using Discord_AI_Presence.Text_WebUI.ProfileScripts;
+﻿using Discord_AI_Presence.Text_WebUI.DiscordStuff;
+using Discord_AI_Presence.Text_WebUI.ProfileScripts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -41,6 +42,20 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <param name="userID">The Discord message ID number</param>
         /// <returns>Returns a default struct if message is not found.</returns>
         public Memory FindMessageByUserID(ulong userID) => ChatHistory.FirstOrDefault(x => x.UserID == userID);
+
+        /// <summary>
+        /// Gets all chat participants.
+        /// </summary>
+        /// <returns>Returns chat participants without duplicates.</returns>
+        public List<string> Participants() 
+        {
+            HashSet<string> result = [];
+            foreach (var g in ChatHistory)
+            {
+                result.Add(g.Name);
+            }
+            return result.ToList();
+        }
 
         /// <summary>
         /// Removes message from chat history
@@ -121,8 +136,14 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <param name="username">Name of the Discord user</param>
         /// <param name="message">Message sent to Discord</param>
         /// <param name="userID">Discord static User ID. AI ID is 000000</param>
-        public void AddMessage(string username, string message, ulong userID, ulong msgID)
+        /// <param name="serverSettings">To check if a message should be sent to memory add the settings here, otherwise null.</param>
+        public void AddMessage(string username, string message, ulong userID, ulong msgID, Settings serverSettings = null)
         {
+            if(serverSettings != null)
+            {
+                if (!AllowMemorySubmission(message, serverSettings.BotCommandTrigger))
+                    return;
+            }
             ChatHistory.Add(new Memory(message, username, userID, msgID));
         }
 
@@ -148,6 +169,23 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         public int Chat_TotalTokens(string charProfile)
         {
             return (int)((Get_TotalCharacterCount + charProfile.Length) / TOKEN_MULTIPLIER);
+        }
+
+        /// <summary>
+        /// Some checks to make sure things aren't being submitted to memory that might negatively affect AI quality.
+        /// </summary>
+        /// <param name="msg">the message to check</param>
+        /// <param name="cmdTrigger">the discord bot's command trigger</param>
+        /// <returns></returns>
+        private static bool AllowMemorySubmission(string msg, string cmdTrigger)
+        {
+            if (msg.Length > 2 && msg[0] == '`' && msg[^1] == '`')
+                return false; //Allows ` and ` opening/closing to not trigger AI responses or add to memory.
+            if (msg.Length > cmdTrigger.Length && msg.Substring(0, cmdTrigger.Length).Equals(cmdTrigger))
+                return false; //bot commands won't be sent to memory.
+            if (msg.Length > 3 && msg[0] == '<' && msg[1] == ':' && msg[^1] == '>')
+                return false; // Custom emojis won't be submitted to memory
+            return true;
         }
     }
 }

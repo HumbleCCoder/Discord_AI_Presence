@@ -39,7 +39,7 @@ namespace UnitTesting
                 Assert.That(chats.TrimChatHistory(2), Is.EqualTo(3));
                 Assert.That(chats.ChatHistory[1].Name, Is.EqualTo("Test3"));
             });
-            Console.WriteLine(chats.Chat_TotalTokens(chats.CharacterProfile.ProfileInfo()));//912 tokens
+            Console.WriteLine(chats.Chat_TotalTokens(chats.CharacterProfile.ProfileInfo("BobTheTester")));//912 tokens
             var printedHistory = chats.PrintHistory(true);
             Assert.Multiple(() =>
             {

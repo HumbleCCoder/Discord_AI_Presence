@@ -89,7 +89,7 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
 
             ClientObj.InteractionCreated -= HandleInteraction;
             ClientObj.InteractionCreated += HandleInteraction;
-            TextUI_Base.GetInstance().PopulateServerData(ClientObj.Guilds.ToList());
+            TextUI_Base.GetInstance().PopulateServerData([.. ClientObj.Guilds]);
         }
     }
 }
