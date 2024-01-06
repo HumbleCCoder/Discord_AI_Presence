@@ -23,7 +23,7 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         public string WorldScenario { get; init; }
 
         [JsonProperty("scenario")]
-        public string Scenario { get; init; }
+        public string Scenario { get; set; }
 
         [JsonProperty("char_name")]
         public string CharacterName { get; init; }
@@ -86,11 +86,9 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
                 if (prop.GetValue(this) == null || prop.GetValue(this).GetType() != typeof(string)
                     || prop.Name.Equals("CharacterIntroduction") || string.IsNullOrEmpty((string)prop.GetValue(this)))
                     continue;
-                //prop.GetValue(this).GetType().Dump();
                 sb.AppendLine($"{prop.Name}: ").
                     AppendLine((string)prop.GetValue(this)).AppendLine();
             }
-            //sb.AppendLine($"{prop.Name}: ").Append(prop.GetValue(this));
             return sb.ToString().Replace("<START>", $"This is how {CharacterName} should speak");
         }
 
@@ -100,7 +98,7 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
             {
                 if (string.IsNullOrEmpty(WorldScenario))
                     return Scenario;
-                return WorldScenario!;
+                return WorldScenario;
             }
         }
 
@@ -133,15 +131,16 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
             foreach (var prop in properties)
             {
                 if (prop.GetValue(this) != null && prop.GetValue(this).GetType() == typeof(string) && !string.IsNullOrEmpty(prop.GetValue(this).ToString()))
-                    prop.SetValue(this, prop.GetValue(this).ToString().
-                        Replace("{{char}}", NickOrName()).
-                        Replace("{{user}}", username));
+                    if (prop.CanWrite) // Checks if property is not readonly before attempting to set the value.
+                        prop.SetValue(this, prop.GetValue(this).ToString().
+                            Replace("{{char}}", NickOrName()).
+                            Replace("{{user}}", username));
             }
-            for(int i = 0; i < AllGreetings.Count; i++)
+            for (int i = 0; i < AllGreetings.Count; i++)
             {
-                    AllGreetings[i] = AllGreetings[i].
-                    Replace("{{char}}", NickOrName()).
-                    Replace("{{user}}", username);
+                AllGreetings[i] = AllGreetings[i].
+                Replace("{{char}}", NickOrName()).
+                Replace("{{user}}", username);
             }
         }
     }

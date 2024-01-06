@@ -1,5 +1,6 @@
 ﻿using Discord_AI_Presence.Text_WebUI.ProfileScripts;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public abstract class ChatHistoryManager
     {
@@ -16,12 +20,46 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <summary>
         /// Shaved 200 off the actual limit of 2000 to prevent issues.
         /// </summary>
-        private const int Discord_Character_Limit = 1800;
-        private const int MAX_TOKEN_SIZE = 2018;
-        private const double TOKEN_MULTIPLIER = 3.701d;
+        protected const int Discord_Character_Limit = 1800;
+        protected const int MAX_TOKEN_SIZE = 2018;
+        protected const double TOKEN_MULTIPLIER = 3.701d;
 
         public Memory FirstMsg => ChatHistory[0];
         public int HistoryCount => ChatHistory.Count;
+
+        public abstract List<string> HistoryByCharacterLimit(bool includeProfile = false);
+
+        /// <summary>
+        /// Find the message by its unique Discord ID number.
+        /// </summary>
+        /// <param name="msgID">The Discord message ID number</param>
+        /// <returns>Returns a default struct if message is not found.</returns>
+        public Memory FindMessageByID(ulong msgID) => ChatHistory.FirstOrDefault(x => x.MsgID == msgID);
+        /// <summary>
+        /// Find the user by their unique Discord ID number.
+        /// </summary>
+        /// <param name="userID">The Discord message ID number</param>
+        /// <returns>Returns a default struct if message is not found.</returns>
+        public Memory FindMessageByUserID(ulong userID) => ChatHistory.FirstOrDefault(x => x.UserID == userID);
+
+        /// <summary>
+        /// Removes message from chat history
+        /// </summary>
+        /// <param name="byIndex">Removes by exact index</param>
+        public void RemoveMessage(int byIndex)
+        {
+            ChatHistory.RemoveAt(byIndex);
+        }
+
+        /// <summary>
+        /// Removes message from chat history
+        /// </summary>
+        /// <param name="byString">Search by matching string</param>
+        public void RemoveMessage(string byString)
+        {
+            int index = ChatHistory.FindIndex(x => x.Message.Equals(byString, StringComparison.OrdinalIgnoreCase));
+            ChatHistory.RemoveAt(index);
+        }
 
         /// <summary>
         /// Finds the current greetings being used.
@@ -66,14 +104,12 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
             }
         }
 
-        public ChatHistoryManager()
-        {
-
-        }
+        public ChatHistoryManager() { }
 
         /// <summary>
-        /// In case a chat needs to be taken to a new channel you can simply swap the chat history.
+        /// Swap the chat history. Useful for switching to a new channel or reloading data on bot restart.
         /// </summary>
+        /// <param name="chatHistory">The new chat history</param>
         public void SwapChatHistory(List<Memory> chatHistory)
         {
             ChatHistory = chatHistory;
@@ -84,7 +120,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// </summary>
         /// <param name="username">Name of the Discord user</param>
         /// <param name="message">Message sent to Discord</param>
-        /// <param name="userID">Discord static User ID</param>
+        /// <param name="userID">Discord static User ID. AI ID is 000000</param>
         public void AddMessage(string username, string message, ulong userID, ulong msgID)
         {
             ChatHistory.Add(new Memory(message, username, userID, msgID));
@@ -102,11 +138,12 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         }
 
         /// <summary>
-        /// Returns the token count. AI neuro net removes from the leftmost position with their automatic trimming process. Unfortunately this can often trim character profiles.
-        /// It is possible to submit the character profile after the chat history, to let the auto trimming work on the history only, but the AI may say a lot of nonsense
-        /// reducing the quality of chat if the history isn't last.
+        /// Returns the token count. AI neuro net removes from the leftmost position with their automatic trimming process. 
+        /// Unfortunately this can often trim character profiles.
+        /// It is possible to submit the character profile after the chat history, to let the auto trimming work on the history only, 
+        /// but the AI may say a lot of nonsense reducing the quality of chat if the history isn't last.
         /// </summary>
-        /// <param name="charProfile">Character profile data should always be in the chat history and never trimmed..</param>
+        /// <param name="charProfile">Character profile data should always be in the chat history and never trimmed.</param>
         /// <returns>Token count of message history and character profile.</returns>
         public int Chat_TotalTokens(string charProfile)
         {

@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Discord_AI_Presence.Text_WebUI.MemoryManagement;
 using Discord_AI_Presence.Text_WebUI.Presets;
+using Microsoft.VisualBasic;
 using static Discord_AI_Presence.Text_WebUI.Presets.TextUI_Presets;
 namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
 {
@@ -16,10 +17,9 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
             {
                 //await Context.Interaction.DeferAsync();
                 var curServer = TextUI_Base.GetInstance().ServerData.FirstOrDefault(x => x.ServerID == Context.Guild.Id);
-                if (curServer == null)
-                    TextUI_Base.GetInstance().ServerData.Add(new TextUI_Servers(Context.Guild.Id, new Settings(), []));
                 curServer = TextUI_Base.GetInstance().ServerData.First(x => x.ServerID == Context.Guild.Id);
-                if (!curServer.AIChats.TryGetValue(Context.User.Id, out Chats chat))
+                var chat = curServer.AIChats.FirstOrDefault(x => x.ChatStarterUserID == Context.Interaction.User.Id);
+                if (chat == null)
                 {
                     await RespondAsync("You do not have a chat going right now.");
                     return;
@@ -37,8 +37,9 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
         public async Task SwapIntro()
         {
             var curServer = TextUI_Base.GetInstance().ServerData.First(x => x.ServerID == Context.Guild.Id);
-            if (!curServer.AIChats.TryGetValue(Context.User.Id, out Chats chat))
-            {
+            var chat = curServer.AIChats.FirstOrDefault(x => x.ChatStarterUserID == Context.Interaction.User.Id);
+            if (chat == null)
+            { 
                 await RespondAsync("You do not have a chat going right now.");
                 return;
             }

@@ -9,34 +9,38 @@ namespace Discord_AI_Presence.Text_WebUI.Instructions
     /// <summary>
     /// Throw these in the Scenario part of the character profiles
     /// </summary>
-    static internal class Scenario
+    public static class Scenario
     {
         public enum ScenarioPresets { Roleplay, Chatbot, Default }
         private const string Chatbot = "{{char}} has joined an online community to chat with people. {{char}} should keep all conversation SFW and refrain from discussing illegal topics.";
         private const string Roleplaybot = "{{char}} should advance the story and be creative. {{char}} should always remain in character. {{char}} should only narrate and write for {{char}}.";
 
         /// <summary>
-        /// Use {{char}} to refer to the character. It will be replaced with the name later.
+        /// Use {{char}} to refer to the character. It will be replaced with the character name here.
         /// </summary>
         /// <param name="presets">Type of preset</param>
         /// <param name="custom">If not empty/null, it will be chosen by default</param>
         /// <returns>Returns empty if custom is chosen but no dialogue is set</returns>
-        public static string GetScenario(ScenarioPresets presets, string custom = "")
+        public static string GetScenario(ScenarioPresets presets, string characterName, string custom = "")
         {
-            if(!string.IsNullOrEmpty(custom)) 
+            if (!string.IsNullOrEmpty(custom))
                 presets = ScenarioPresets.Default;
+            string value = string.Empty;
             switch (presets)
             {
                 case ScenarioPresets.Roleplay:
-                    return Roleplaybot;
+                    value = Roleplaybot;
+                    break;
                 case ScenarioPresets.Chatbot:
-                    return Chatbot;
+                    value = Chatbot;
+                    break;
                 default:
                     if (string.IsNullOrEmpty(custom))
                         break;
-                    return custom;
+                    value = custom;
+                    break;
             }
-            return string.Empty;
+            return value.Replace("{{char}}", characterName);
         }
     }
 }
