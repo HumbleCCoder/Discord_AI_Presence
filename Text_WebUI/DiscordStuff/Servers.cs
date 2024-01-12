@@ -27,6 +27,7 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
         /// <summary>
         /// For picking a character if a duplicate is found.
         /// First button should be the next character button. Second should pick a character
+        /// The key should be the Discord server channel ID number.
         /// </summary>
         internal Dictionary<ulong,ButtonHandling> DuplicateHandling { get; init; } = new();
 
