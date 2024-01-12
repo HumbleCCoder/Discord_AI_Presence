@@ -7,10 +7,15 @@ using System.Threading.Tasks;
 
 namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
 {
+    /*
+     * No AI Channels means that AI cannot be called out by anyone. AI can come out in all channels not set at NoAiChannels.
+     * Dedicated AI Channels are roleplay channels with default introductions.
+     */
     public class Settings
     {
         /// <summary>
         /// A dedicated AI channel is a channel that can reload chat history from if the bot is closed.
+        /// These channels will be roleplay channels and, as such, use character's default intro messages.
         /// </summary>
         public List<ulong> DedicatedAIChannels { get; set; } = [];
         /// <summary>

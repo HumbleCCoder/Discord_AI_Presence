@@ -11,9 +11,9 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
         private DiscordSocketClient ClientObj = new();
         private InteractionService InteractionServices { get; set; }
         private CommandService _commands = new();
-        private SocketCommandContext Context { get; set; }
-        private SocketUserMessage Message { get; set; }
-        private ClientDelegates Delegates => new (ClientObj, Context, Message);
+        private SocketCommandContext Context;// { get; set; }
+        private SocketUserMessage Message;// { get; set; }
+        private ClientDelegates Delegates;//
         private static Client _instance;
         private static object _instanceLock = new ();
 
@@ -28,6 +28,8 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
             }
             return _instance;
         }
+
+        public SocketGuild FindGuild(ulong guildId) => GetInstance().ClientObj.GetGuild(guildId);
 
         public string FindUsername(ulong userID)
         {
@@ -82,6 +84,7 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
                 UseCompiledLambda = true,
                 DefaultRunMode = Discord.Interactions.RunMode.Async
             };
+            Delegates = new(ref ClientObj, ref Context, ref Message);
             InteractionServices = new InteractionService(ClientObj, t);
             var serverID = File.ReadAllText(@$"{Environment.CurrentDirectory}\HelperFile.txt");
             await InteractionServices.AddModulesAsync(Assembly.GetEntryAssembly(), null);

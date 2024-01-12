@@ -11,8 +11,8 @@ namespace UnitTesting
         public void HistoryTest()
         {
             TextUI_Servers ser = new(0000000);
-            ser.StartChat(new Chats(0543, TextUI_Base.GetInstance().Cards.First().Value, ser.ServerSettings.DefaultPreset, "BobTheTester", Discord_AI_Presence.Text_WebUI.Instructions.Scenario.ScenarioPresets.Roleplay, 9023));
-            var chats = ser.AIChats[^1];
+            ser.StartChat(new Chats(0543, TextUI_Base.GetInstance().Cards.First().Value.First(), ser.ServerSettings.DefaultPreset, "BobTheTester", Discord_AI_Presence.Text_WebUI.Instructions.Scenario.ScenarioPresets.Roleplay, 9023));
+            var chats = ser.AIChats.Last().Value;
             chats.AddMessage("Test1", "A test is being conducted1", 777, 900);
             chats.AddMessage("Test2", "A test is being conducted2", 778, 901);
             chats.AddMessage("Test3", "A test is being conducted3", 779, 902);
@@ -20,12 +20,12 @@ namespace UnitTesting
             for (int i = 1; i < chats.ChatHistory.Count; i++)
             {
                 //Assert.Warn("This is I: " + i.ToString() + $" || Test{i}\n{chats.ChatHistory[i].Name}");
+                var history = chats.ChatHistory.ToList();
                 Assert.Multiple(() =>
                 {
-                    Assert.That(chats.ChatHistory[i].Name, Is.EqualTo($"Test{i}"));
-                    Assert.That(chats.ChatHistory[i].Message, Is.EqualTo($"A test is being conducted{i}"));
-                    Assert.That(chats.ChatHistory[i].UserID, Is.EqualTo(776 + i));
-                    Assert.That(chats.ChatHistory[i].MsgID, Is.EqualTo(899 + i));
+                    Assert.That(history[i].Value.Name, Is.EqualTo($"Test{i}"));
+                    Assert.That(history[i].Value.Message, Is.EqualTo($"A test is being conducted{i}"));
+                    Assert.That(history[i].Value.UserID, Is.EqualTo(776 + i));
                 });
             }
 

@@ -17,11 +17,9 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
             try
             {
                 //await Context.Interaction.DeferAsync();
-                var curServer = TextUI_Base.GetInstance().ServerData.FirstOrDefault(x => x.ServerID == Context.Guild.Id);
-                if (curServer == null)
-                    return;
-                var chat = curServer.AIChats.FirstOrDefault(x => x.ChatStarterUserID == Context.Interaction.User.Id);
-                if (chat == null)
+                
+                var curServer = TextUI_Base.GetInstance().ServerData[Context.Guild.Id];
+                if (curServer.AIChats.TryGetValue(Context.Channel.Id, out var chats))
                 {
                     await RespondAsync("You do not have a chat going right now.");
                     return;
@@ -35,15 +33,12 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
             }
         }
 
-        [SlashCommand("startchat", "Begins a new chat with an AI. A user can only be engaged with one AI at a time, per server. Only one AI per channel too.")]
+        /*[SlashCommand("startchat", "Begins a new chat with an AI. A user can only be engaged with one AI at a time, per server. Only one AI per channel too.")]
         public async Task StartChat(string characterName, PresetEnum presets, Scenario.ScenarioPresets scenarioType)
         {
-            var curServer = TextUI_Base.GetInstance().ServerData.FirstOrDefault(x => x.ServerID == Context.Guild.Id);
-            var chat = new Chats(Context.Channel.Id, presets, characterName, Scenario.GetScenario(scenarioType, characterName), Context.User.Id);
-            curServer.StartChat(chat);
-            await Context.Interaction.DeferAsync(true);
-            await Context.Interaction.DeleteOriginalResponseAsync();
-
-        }
+            Will work on this much later if it's still needed. Since the dropdown list is limited to 25 choices I don't think this is particularly useful 
+            except for bots that are limited to slash commands only. This will be a do when needed thing.
+            throw new NotImplementedException();
+        }*/
     }
 }

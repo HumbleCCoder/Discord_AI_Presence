@@ -1,4 +1,5 @@
-﻿using Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework;
+﻿using Discord_AI_Presence.Text_WebUI.AiRelated;
+using Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework;
 using Discord_AI_Presence.Text_WebUI.Instructions;
 using Discord_AI_Presence.Text_WebUI.Presets;
 using Discord_AI_Presence.Text_WebUI.ProfileScripts;
@@ -14,14 +15,19 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
     public class Chats : ChatHistoryManager
     {
         public const int CHARACTER_ID = 000000;
-        public TextUI_Presets Presets { get; init; }
-        public ProfileData CharacterProfile { get; init; }
+        public TextUI_Presets Presets { get; }
+        public ProfileData CharacterProfile { get; }
         /// <summary>
         /// Will not be serialized. This reduces client calls to get usernames.
         /// </summary>
-        public string Username { get; init; }
+        public string Username { get; }
         [JsonProperty]
         public ulong ChatStarterUserID { get; init; }
+        /// <summary>
+        /// In the event of a duplicate character name, this tells us which index that character is in.
+        /// </summary>
+        [JsonProperty]
+        public int CharacterIndex { get; init; }
         [JsonProperty]
         public ulong ChannelID { get; init; }
         /// <summary>
@@ -36,24 +42,20 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         public TextUI_Presets.PresetEnum PresetName { get; init; }
         [JsonProperty]
         public string ScenarioInfo { get; init; }
+        internal readonly AiFlow aiFlow;
 
         [JsonConstructor]
-        public Chats(ulong ChannelID, TextUI_Presets.PresetEnum PresetName, string CharacterName, string ScenarioInfo, ulong ChatStarterUserID)
+        private Chats()
         {
-            this.ChannelID = ChannelID;
             Presets = new TextUI_Presets();
-            this.PresetName = PresetName;
             Presets.ChangePreset(PresetName);
-            this.CharacterName = CharacterName;
-            this.ChatStarterUserID = ChatStarterUserID;
-
-            if (!TextUI_Base.GetInstance().Cards.TryGetValue(this.CharacterName, out ProfileData value))
+            if (!TextUI_Base.GetInstance().Cards.TryGetValue(this.CharacterName, out var value))
             {
                 throw new Exception("Failed to load character profile data. This is likely a bug.");
             }
-            this.ScenarioInfo = ScenarioInfo;
-            CharacterProfile = value;
-            CharacterProfile.Scenario = this.ScenarioInfo;
+            CharacterProfile = value[CharacterIndex];
+            CharacterProfile.ChangeScenario(ScenarioInfo);
+            aiFlow = new AiFlow(CharacterProfile, ChannelID);
             Username = Client.GetInstance().FindUsername(ChatStarterUserID);
         }
 
@@ -65,26 +67,25 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <param name="charProfile">The character profile</param>
         /// <param name="presets">Default preset for the chat</param>
         /// <param name="username">Username who started the chat (so we don't have to call the client constantly. Username is not serialized.</param>
-        public Chats(ulong channelID, ProfileData charProfile, TextUI_Presets.PresetEnum PresetName, string username, Scenario.ScenarioPresets scenario, ulong userID, string customScenario = "")
+        public Chats(ulong channelID, ProfileData charProfile, TextUI_Presets.PresetEnum PresetName, string username, Scenario.ScenarioPresets scenario, ulong userID, int CharacterIndex = 0, string customScenario = "")
         {
             ChannelID = channelID;
             CharacterProfile = charProfile;
             Presets = new TextUI_Presets();
             this.PresetName = PresetName;
             Presets.ChangePreset(PresetName);
-            CharacterName = CharacterProfile.CharacterName;
+            CharacterName = CharacterProfile.Name;
             Username = username;
+            this.CharacterIndex = CharacterIndex;
             if (!string.IsNullOrEmpty(customScenario))
-            {
-                scenario = Scenario.ScenarioPresets.Default;
-                CharacterProfile.Scenario = Scenario.GetScenario(scenario, charProfile.NickOrName(), customScenario);
-            }
+                CharacterProfile.ChangeScenario(Scenario.GetScenario(scenario, charProfile.NickOrName(), customScenario));
             else
-                CharacterProfile.Scenario = Scenario.GetScenario(scenario, charProfile.NickOrName());
+                CharacterProfile.ChangeScenario(Scenario.GetScenario(scenario, charProfile.NickOrName()));
             ScenarioInfo = CharacterProfile.Scenario;
             if (scenario != Scenario.ScenarioPresets.Chatbot)
-                AddMessage(CharacterProfile.NickOrName(), CharacterProfile.AllGreetings[0], CHARACTER_ID, CHARACTER_ID);
+                AddMessage(CharacterProfile.NickOrName(), CharacterProfile.CharacterIntroduction, CHARACTER_ID, CHARACTER_ID);
             ChatStarterUserID = userID;
+            aiFlow = new AiFlow(CharacterProfile, ChannelID);
         }
 
 
@@ -100,9 +101,9 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
                 sb.AppendLine(CharacterProfile.ProfileInfo(Username));
             foreach (var data in ChatHistory)
             {
-                sb.Append(data.Name).
+                sb.Append(data.Value.Name).
                     Append(": ").
-                    AppendLine(data.Message);
+                    AppendLine(data.Value.Message);
             }
             return sb.ToString().Replace("\r", string.Empty);
         }
@@ -120,7 +121,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
             StringBuilder sb = new();
             foreach (var data in ChatHistory)
             {
-                string format = data.Format();
+                string format = data.Value.Format();
                 if (format.Length + sb.Length >= Discord_Character_Limit)
                 {
                     total = (includeProfile) ? CharacterProfile.ProfileInfo(Username).Length : 0;

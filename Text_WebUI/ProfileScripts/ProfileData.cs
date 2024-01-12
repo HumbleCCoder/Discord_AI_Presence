@@ -19,16 +19,13 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         [JsonProperty("example_dialogue")]
         public string ExampleDialogue { get; init; }
 
-        [JsonProperty("world_scenario")]
-        public string WorldScenario { get; init; }
-
         [JsonProperty("scenario")]
         public string Scenario { get; set; }
 
-        [JsonProperty("char_name")]
-        public string CharacterName { get; init; }
+        [JsonProperty("name")]
+        public string Name { get; init; }
 
-        [JsonProperty("char_nickname")]
+        [JsonProperty("nickname")]
         public string CharacterNickName { get; init; }
 
         [JsonProperty("avatar")]
@@ -45,13 +42,10 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         #endregion
 
         [JsonConstructor]
-        public ProfileData(string CharacterIntroduction, List<string> AllGreetings, string CharacterName, string CharacterDescription)
+        private ProfileData(string Scenario)
         {
-            this.CharacterName = CharacterName;
-            this.CharacterDescription = CharacterDescription;
-            this.CharacterIntroduction = CharacterIntroduction;
+            this.Scenario = Scenario;
             AllGreetings ??= [];
-            this.AllGreetings = AllGreetings;
             if (!string.IsNullOrEmpty(this.CharacterIntroduction))
             {
                 AllGreetings.Insert(0, CharacterIntroduction);
@@ -84,34 +78,25 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
             foreach (var prop in properties)
             {
                 if (prop.GetValue(this) == null || prop.GetValue(this).GetType() != typeof(string)
-                    || prop.Name.Equals("CharacterIntroduction") || string.IsNullOrEmpty((string)prop.GetValue(this)))
+                    || string.IsNullOrEmpty((string)prop.GetValue(this)))
                     continue;
                 sb.AppendLine($"{prop.Name}: ").
                     AppendLine((string)prop.GetValue(this)).AppendLine();
             }
             return sb.ToString()
-                .Replace("<START>", $"This is how {CharacterName} should speak")
+                .Replace("<START>", $"This is how {Name} should speak")
                 .Replace("{{char}}", NickOrName())
                 .Replace("{{user}}", username);
         }
 
-        public string ScenarioInfo
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(WorldScenario))
-                    return Scenario;
-                return WorldScenario;
-            }
-        }
-
         /// <summary>
         /// If the character has a nickname it will use that instead of their character name.
+        /// This includes the key file for the profile dictionary.
         /// </summary>
         /// <returns></returns>
         public string NickOrName()
         {
-            return CharacterNickName ?? CharacterName;
+            return CharacterNickName ?? Name;
         }
 
         public int GreetingsIterator(int curIndex)
@@ -122,6 +107,11 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
             if (curIndex == AllGreetings.Count)
                 return 0;
             return curIndex;
+        }
+
+        public void ChangeScenario(string scenario)
+        {
+            this.Scenario = scenario;
         }
     }
 }

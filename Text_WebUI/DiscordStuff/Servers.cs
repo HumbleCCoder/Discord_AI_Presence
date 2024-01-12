@@ -1,9 +1,13 @@
-﻿using Discord_AI_Presence.Text_WebUI.MemoryManagement;
+﻿using Discord.WebSocket;
+using Discord_AI_Presence.Text_WebUI.Button_Related;
+using Discord_AI_Presence.Text_WebUI.MemoryManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
 {
@@ -16,29 +20,63 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
         public Settings ServerSettings { get; set; } = new();
         /// <summary>
         /// Contains the AI chats taking place in this server.
+        /// The key is the channel ID.
         /// </summary>
-        public List<Chats> AIChats { get; init; } = [];
+        public Dictionary<ulong, Chats> AIChats { get; init; } = [];
 
-        public Chats FindChat(ulong channeID) => AIChats.FirstOrDefault(x => x.ChannelID == channeID);
+        /// <summary>
+        /// For picking a character if a duplicate is found.
+        /// First button should be the next character button. Second should pick a character
+        /// </summary>
+        internal Dictionary<ulong,ButtonHandling> DuplicateHandling { get; init; } = new();
+
+        /// <summary>
+        /// Find chat by channel ID.
+        /// </summary>
+        /// <param name="channelId">The Discord channel ID</param>
+        /// <param name="chatStarterId">The user ID of the person who started the chat</param>
+        /// <returns>Null if not found, otherwise the chat</returns>
+        public Chats FindChat(ulong channelId)
+        {
+            if (!AIChats.TryGetValue(channelId, out var chats))
+                return null;
+
+            return chats;
+        }
 
         public void ChangeSettings(Settings newSettings) => ServerSettings = newSettings;
+
         /// <summary>
-        /// Gets the message by the ID number. Checks if the message ID is > 0 meaning it returned a default struct if it's 0;
+        /// Gets the message by the ID number.;
         /// </summary>
         /// <param name="MsgID">Discord message ID number</param>
-        /// <returns>Returns null if not found.</returns>
-        public Chats FindChatByMsgID(ulong MsgID) => AIChats.FirstOrDefault(x => x.FindMessageByID(MsgID).MsgID > 0);
+        /// <param name="channelId">Discord channel ID number</param>
+        /// <returns>Returns a default state struct if not found.</returns>
+        public Memory FindMsgByMsgID(ulong MsgID, ulong channelId)
+        {
+            if (!AIChats.TryGetValue(channelId, out var chats))
+                return default;
+
+            if (!chats.ChatHistory.TryGetValue(MsgID, out var msg))
+                return default;
+
+            return msg;
+        }
 
 
         public void StartChat(Chats chat)
         {
-            AIChats.Add(chat);
+            if (AIChats.ContainsKey(chat.ChannelID))
+                return;
+            AIChats.Add(chat.ChannelID, chat);
         }
 
-        public void EndChat(string charName)
+        public bool EndChat(ulong channelID, bool end)
         {
-            var index = AIChats.FindIndex(x => x.CharacterName.Equals(charName, StringComparison.OrdinalIgnoreCase));
-            AIChats.RemoveAt(index);
+            if (!end)
+                return false;
+            AIChats.Remove(channelID);
+            return true;
         }
 
         /// <summary>
@@ -50,18 +88,7 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
         /// <returns>True if a current AI chat is happening in the channel</returns>
         public bool AiChatExists(ulong channelId)
         {
-            return AIChats.FirstOrDefault(x => x.ChannelID == channelId) != null;
-        }
-
-        /// <summary>
-        /// This method is to prevent the same characters from existing in a channel at the same time.
-        /// </summary>
-        /// <param name="charName">Character name</param>
-        /// <returns>Returns not null if the character exists in the channel already. Otherwise not null if they do not exist.</returns>
-        public bool ExistsInChannel(string charName)
-        {
-            if (AIChats == null) return false;
-            return AIChats.FirstOrDefault(x => x.CharacterName.Equals(charName, StringComparison.OrdinalIgnoreCase)) != null;
+            return AIChats.ContainsKey(channelId);
         }
     }
 }

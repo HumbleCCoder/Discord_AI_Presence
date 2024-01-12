@@ -28,7 +28,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
             for (int i = startAt + 1; i < cacheMsgs.Count; i++)
             {
                 var msg = cacheMsgs[i];
-                mem.Add(new Memory(msg.Content,msg.Author.GlobalName ?? msg.Author.Username,msg.Author.Id,msg.Id));
+                mem.Add(new Memory(msg.Content,msg.Author.GlobalName ?? msg.Author.Username,msg.Author.Id));
             }
             return mem;
         }

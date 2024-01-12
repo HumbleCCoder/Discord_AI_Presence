@@ -17,7 +17,10 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public abstract class ChatHistoryManager
     {
-        public List<Memory> ChatHistory { get; protected set; } = [];
+        /// <summary>
+        /// Key is the msg id number
+        /// </summary>
+        public Dictionary<ulong, Memory> ChatHistory { get; protected set; } = [];
         /// <summary>
         /// Shaved 200 off the actual limit of 2000 to prevent issues.
         /// </summary>
@@ -35,13 +38,26 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// </summary>
         /// <param name="msgID">The Discord message ID number</param>
         /// <returns>Returns a default struct if message is not found.</returns>
-        public Memory FindMessageByID(ulong msgID) => ChatHistory.FirstOrDefault(x => x.MsgID == msgID);
+        public Memory FindMessageByID(ulong msgID)
+        {
+            if (!ChatHistory.TryGetValue(msgID, out var result))
+                return default;
+            return result;
+        }
         /// <summary>
-        /// Find the user by their unique Discord ID number.
+        /// Find the message by the user's unique Discord ID number.
         /// </summary>
         /// <param name="userID">The Discord message ID number</param>
         /// <returns>Returns a default struct if message is not found.</returns>
-        public Memory FindMessageByUserID(ulong userID) => ChatHistory.FirstOrDefault(x => x.UserID == userID);
+        public Memory FindMessageByUserID(ulong userID)
+        {
+            foreach(var chats in ChatHistory)
+            {
+                if (chats.Value.UserID == userID)
+                    return chats.Value;
+            }
+            return default;
+        }
 
         /// <summary>
         /// Gets all chat participants.
@@ -52,7 +68,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
             HashSet<string> result = [];
             foreach (var g in ChatHistory)
             {
-                result.Add(g.Name);
+                result.Add(g.Value.Name);
             }
             return result.ToList();
         }
@@ -60,20 +76,21 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <summary>
         /// Removes message from chat history
         /// </summary>
-        /// <param name="byIndex">Removes by exact index</param>
-        public void RemoveMessage(int byIndex)
+        /// <param name="byMsgID">Removes by exact index</param>
+        public void RemoveMessage(ulong byMsgID)
         {
-            ChatHistory.RemoveAt(byIndex);
+            ChatHistory.Remove(byMsgID);
         }
 
         /// <summary>
-        /// Removes message from chat history
+        /// Removes message from chat history. This isn't really ideal for performance so should only be used when cleaning up memory
+        /// in the event that the message ID can't be found anymore.
         /// </summary>
         /// <param name="byString">Search by matching string</param>
         public void RemoveMessage(string byString)
         {
-            int index = ChatHistory.FindIndex(x => x.Message.Equals(byString, StringComparison.OrdinalIgnoreCase));
-            ChatHistory.RemoveAt(index);
+            var key = ChatHistory.FirstOrDefault(x => x.Value.Message.Equals(byString, StringComparison.OrdinalIgnoreCase)).Key;
+            ChatHistory.Remove(key);
         }
 
         /// <summary>
@@ -97,7 +114,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
                 int counter = 0;
                 foreach (var data in ChatHistory)
                 {
-                    counter += data.Message.Split(' ').Length + data.Name.Split(' ').Length;
+                    counter += data.Value.Message.Split(' ').Length + data.Value.Name.Split(' ').Length;
                 }
                 return counter;
             }
@@ -113,7 +130,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
                 var counter = 0;
                 foreach (var data in ChatHistory)
                 {
-                    counter += data.Message.Length + data.Name.Length;
+                    counter += data.Value.Message.Length + data.Value.Name.Length;
                 }
                 return counter;
             }
@@ -125,7 +142,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// Swap the chat history. Useful for switching to a new channel or reloading data on bot restart.
         /// </summary>
         /// <param name="chatHistory">The new chat history</param>
-        public void SwapChatHistory(List<Memory> chatHistory)
+        public void SwapChatHistory(Dictionary<ulong, Memory> chatHistory)
         {
             ChatHistory = chatHistory;
         }
@@ -144,7 +161,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
                 if (!AllowMemorySubmission(message, serverSettings.BotCommandTrigger))
                     return;
             }
-            ChatHistory.Add(new Memory(message, username, userID, msgID));
+            ChatHistory.Add(msgID, new Memory(message, username, userID));
         }
 
         /// <summary>
@@ -154,7 +171,11 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <returns>The count of the chat history array after the trim.</returns>
         public int TrimChatHistory(int trimAmt)
         {
-            ChatHistory.RemoveRange(0, trimAmt);
+            var removalKeys = ChatHistory.Keys.Take(trimAmt);
+            foreach(var keys in removalKeys)
+            {
+                ChatHistory.Remove(keys);
+            }
             return ChatHistory.Count;
         }
 

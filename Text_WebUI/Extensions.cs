@@ -24,17 +24,9 @@ namespace Discord_AI_Presence
 
         [GeneratedRegex("^[a-zA-Z0-9_-]+$")]
         private static partial Regex MyRegex();
-        public static int ReturnRandom(int minimumValue, int maximumValue)
+        public static int ReturnRandom(int minValue, int maxValue)
         {
-            byte[] randomNumber = new byte[1];
-            maximumValue--;
-            RandomNumberGenerator.Create().GetBytes(randomNumber);
-            double asciiValueOfRandomCharacter = Convert.ToDouble(randomNumber[0]);
-            double multiplier = Math.Max(0, (asciiValueOfRandomCharacter / 255d) - 0.00000000001d);
-            int range = maximumValue - minimumValue + 1;
-            double randomValueInRange = Math.Floor(multiplier * range);
-
-            return (int)(minimumValue + randomValueInRange);
+            return RandomNumberGenerator.GetInt32(minValue, maxValue+1);
         }
     }
 }

@@ -17,13 +17,12 @@ namespace Discord_AI_Presence.UnitTesting
             channelId = 9,
             chatStarterUserID = 55,
             msgID = 99;
-        private readonly ProfileData characterProfile = TextUI_Base.GetInstance().Cards.First().Value;
-        TextUI_Servers g;
+        private readonly ProfileData characterProfile = TextUI_Base.GetInstance().Cards.First().Value.First();
+        TextUI_Servers g = new(serverId);
         private Chats Begin()
         {
-            g = new(serverId);
             g.StartChat(new Chats(channelId, characterProfile, g.ServerSettings.DefaultPreset, username, Scenario.ScenarioPresets.Chatbot, chatStarterUserID));
-            return g.AIChats.First();
+            return g.AIChats.First().Value;
         }
 
         [Test]
@@ -51,7 +50,7 @@ namespace Discord_AI_Presence.UnitTesting
             var chat = Begin();
             chat.AddMessage(username, message, chatStarterUserID, msgID);
             Assert.That(g.AIChats.Count, Is.EqualTo(1)); // chat exists
-            g.EndChat(characterProfile.NickOrName());
+            g.EndChat(chat.ChannelID, true);
             Assert.That(g.AIChats.Count, Is.EqualTo(0)); // chat no longer exists
         }
     }

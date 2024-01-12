@@ -17,12 +17,8 @@
         /// Discord static user ID. Will be useful in case a more specific search is required.
         /// </summary>
         public ulong UserID { get; init; }
-        /// <summary>
-        /// Discord message ID for finding and identifying the exact message on Discord
-        /// </summary>
-        public ulong MsgID { get; init; }
-        public Memory(string Message, string Name, ulong UserID, ulong MsgID) =>
-            (this.Message, this.Name, this.UserID, this.MsgID) = (Message, Name, UserID, MsgID);
+        public Memory(string Message, string Name, ulong UserID) =>
+            (this.Message, this.Name, this.UserID) = (Message, Name, UserID);
 
         /// <summary>
         /// Edits the message. Edit messaging is pretty standard practice due to how AI can frequently send unwanted messages in an otherwise good reply.

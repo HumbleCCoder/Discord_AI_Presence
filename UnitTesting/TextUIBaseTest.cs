@@ -18,7 +18,7 @@ namespace UnitTesting
         public void CharacterJsonTest()
         {
             Assert.That(TextUI_Base.GetInstance().Cards, Is.Not.Empty);
-            Assert.That(TextUI_Base.GetInstance().Cards.ElementAt(0).Value.CharacterName, Is.Not.Empty);
+            Assert.That(TextUI_Base.GetInstance().Cards.ElementAt(0).Value[0].Name, Is.Not.Empty);
         }
 
         [Test]

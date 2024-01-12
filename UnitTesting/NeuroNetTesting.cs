@@ -15,14 +15,14 @@ namespace Discord_AI_Presence.UnitTesting
             channelId = 9,
             chatStarterUserID = 55,
             msgID = 99;
-        private readonly ProfileData characterProfile = TextUI_Base.GetInstance().Cards.First().Value;
+        private readonly ProfileData characterProfile = TextUI_Base.GetInstance().Cards.First().Value.First();
         [Test]
         public async Task SubmitToNeuroNet()
         {
             var server = new TextUI_Servers(serverId);
             server.StartChat(new Chats(channelId, characterProfile, TextUI_Presets.PresetEnum.Mirostat, username, Text_WebUI.Instructions.Scenario.ScenarioPresets.Chatbot, chatStarterUserID));
-            server.AIChats.First().AddMessage(username, message, chatStarterUserID, msgID);
-            var result = await Connection.PostMessage(characterProfile, server, server.AIChats.First(), server.AIChats.First().Participants());
+            server.AIChats.First().Value.AddMessage(username, message, chatStarterUserID, msgID);
+            var result = await Connection.PostMessage(characterProfile, server, server.AIChats.First().Value, server.AIChats.First().Value.Participants());
             Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.Not.Empty);
             Console.WriteLine(result);
