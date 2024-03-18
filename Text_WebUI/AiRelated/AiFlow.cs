@@ -15,7 +15,7 @@ namespace Discord_AI_Presence.Text_WebUI.AiRelated
         private readonly ProfileData _profile;
         private readonly string[] _wordTriggers;
         const int MaxValue = 500, MinValue = 0;
-        private int _replyMax = 500, _msgAmt;
+        private int _replyMax = MaxValue, _msgAmt;
         private readonly ulong _channelId;
         internal AiFlow(ProfileData profile, ulong channelId)
         {
@@ -26,8 +26,6 @@ namespace Discord_AI_Presence.Text_WebUI.AiRelated
             };
             _channelId = channelId;
         }
-
-
 
         /// <summary>
         /// Checks if the character's name of any trigger words are used first.
@@ -49,6 +47,7 @@ namespace Discord_AI_Presence.Text_WebUI.AiRelated
             var serverSettings = TextUI_Base.GetInstance().ServerData[scc.Guild.Id].ServerSettings;
             var webhook = TextUI_Base.GetInstance().Webhooks;
             await webhook.SendWebhookMessage(scc.Guild, _profile, serverSettings, msg, scc.Channel.Id);
+            _replyMax = MaxValue;
             return true;
         }
 

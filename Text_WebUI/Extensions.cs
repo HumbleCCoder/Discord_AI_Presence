@@ -26,7 +26,31 @@ namespace Discord_AI_Presence
         private static partial Regex MyRegex();
         public static int ReturnRandom(int minValue, int maxValue)
         {
-            return RandomNumberGenerator.GetInt32(minValue, maxValue+1);
+            return RandomNumberGenerator.GetInt32(minValue, maxValue + 1);
+        }
+
+        private static Random _rand = new();
+
+        public static IList<T> Shuffle<T>(IList<T> list)
+        {
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = _rand.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+            return list;
+        }
+
+        public static bool VeryRare(double rarityThreshold)
+        {
+            Random random = new Random();
+
+            double randomValue = random.NextDouble();
+            return randomValue < rarityThreshold;
         }
     }
 }

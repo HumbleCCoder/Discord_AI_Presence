@@ -36,13 +36,11 @@ namespace Discord_AI_Presence.Text_WebUI
 
         public void PopulateServerData(List<SocketGuild> guilds)
         {
-            // Client ready is run often whenever the client temporarily disconnects from the Discord API server and reconnects.
-            // This is a sanity check to make sure that this server list isn't be populated more than once.
-            if (ServerData.Count > 0)
-                return;
             foreach (var guild in guilds)
             {
-                ServerData.Add(guild.Id, new TextUI_Servers(guild.Id));
+                // Make sure there's no duplicates
+                if (!ServerData.ContainsKey(guild.Id))
+                    ServerData.Add(guild.Id, new TextUI_Servers(guild.Id));
             }
         }
 
@@ -66,6 +64,9 @@ namespace Discord_AI_Presence.Text_WebUI
                 }
                 if (!Cards.TryGetValue(characterName, out var profile))
                     return;
+                var newCharacterJObj = JsonConvert.SerializeObject(profile[index]);
+                var newCharacter = JsonConvert.DeserializeObject<ProfileData>(newCharacterJObj);
+                var chatParameters = new ChatParameters(newCharacter.NickOrName(), scc.Message.Content);
                 var chatSettings = new MemoryManagement.Chats(
                     scc.Channel.Id,
                     profile[index],
@@ -77,12 +78,6 @@ namespace Discord_AI_Presence.Text_WebUI
                 );
 
                 server.StartChat(chatSettings);
-                if (scc == null)
-                    Console.WriteLine("scc");
-                if (profile == null)
-                    Console.WriteLine("profile");
-                if (server == null)
-                    Console.WriteLine("server");
                 await Webhooks.SendWebhookMessage(scc.Guild, profile[index], server.ServerSettings, profile[index].CharacterIntroduction, scc.Channel.Id);
             }
             catch (Exception m)

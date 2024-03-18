@@ -36,10 +36,6 @@ namespace Discord_AI_Presence.Text_WebUI.Button_Related
             _rum = rum;
             _startChanId = startChanId;
             _chatType = chatType;
-            foreach (var test in _profiles)
-            {
-                test.ProfileInfo("Bill").Dump();
-            }
         }
         private int Index
         {
@@ -84,7 +80,8 @@ namespace Discord_AI_Presence.Text_WebUI.Button_Related
 
         public async Task ChooseCharacter(SocketMessageComponent smc)
         {
-            await TextUI_Base.GetInstance().StartChat((ulong)smc.GuildId, (ulong)smc.ChannelId, smc.User.Id, _profiles[_current], _current, _chatType);
+            string defaultPreset = Presets.TextUI_Presets.DefaultPreset;
+            await TextUI_Base.GetInstance().StartChat((ulong)smc.GuildId, (ulong)smc.ChannelId, smc.User.Id, _profiles[_current].GetNewInstance(smc.Message.Content, ref defaultPreset), _current, _chatType);
             await _rum.DeleteAsync();
             TextUI_Base.GetInstance().ServerData[(ulong)smc.GuildId].DuplicateHandling.Remove(_startChanId);
         }

@@ -16,7 +16,8 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
     {
         public const int CHARACTER_ID = 000000;
         public TextUI_Presets Presets { get; }
-        public ProfileData CharacterProfile { get; }
+        [JsonProperty]
+        public ProfileData CharacterProfile { get; init; }
         /// <summary>
         /// Will not be serialized. This reduces client calls to get usernames.
         /// </summary>
@@ -31,11 +32,6 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         [JsonProperty]
         public ulong ChannelID { get; init; }
         /// <summary>
-        /// Instead of serializing entire character profiles, this will be used to call the character upon reload.
-        /// </summary>
-        [JsonProperty]
-        public string CharacterName { get; init; }
-        /// <summary>
         /// Instead of serializing entire preset files, this will be used to simply call the preset.
         /// </summary>
         [JsonProperty]
@@ -44,18 +40,17 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         public string ScenarioInfo { get; init; }
         internal readonly AiFlow aiFlow;
 
+        /// <summary>
+        /// To reload the required data after data persistance is added.
+        /// </summary>
         [JsonConstructor]
         private Chats()
         {
             Presets = new TextUI_Presets();
             Presets.ChangePreset(PresetName);
-            if (!TextUI_Base.GetInstance().Cards.TryGetValue(this.CharacterName, out var value))
-            {
-                throw new Exception("Failed to load character profile data. This is likely a bug.");
-            }
-            CharacterProfile = value[CharacterIndex];
             CharacterProfile.ChangeScenario(ScenarioInfo);
             aiFlow = new AiFlow(CharacterProfile, ChannelID);
+            //
             Username = Client.GetInstance().FindUsername(ChatStarterUserID);
         }
 
@@ -67,16 +62,13 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <param name="charProfile">The character profile</param>
         /// <param name="presets">Default preset for the chat</param>
         /// <param name="username">Username who started the chat (so we don't have to call the client constantly. Username is not serialized.</param>
-        public Chats(ulong channelID, ProfileData charProfile, TextUI_Presets.PresetEnum PresetName, string username, Scenario.ScenarioPresets scenario, ulong userID, int CharacterIndex = 0, string customScenario = "")
+        public Chats(ulong channelID, ProfileData charProfile, TextUI_Presets.PresetEnum presetName, string username, Scenario.ScenarioPresets scenario, ulong userID, int characterIndex = 0, string customScenario = "")
         {
-            ChannelID = channelID;
-            CharacterProfile = charProfile;
+            (CharacterProfile) = (charProfile);
+            (ChannelID, Username) = (channelID, username);
+            (PresetName, CharacterIndex) = (presetName, characterIndex);
             Presets = new TextUI_Presets();
-            this.PresetName = PresetName;
             Presets.ChangePreset(PresetName);
-            CharacterName = CharacterProfile.Name;
-            Username = username;
-            this.CharacterIndex = CharacterIndex;
             if (!string.IsNullOrEmpty(customScenario))
                 CharacterProfile.ChangeScenario(Scenario.GetScenario(scenario, charProfile.NickOrName(), customScenario));
             else
@@ -93,7 +85,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// This prints out the entire chat history. Necessary to submit to the neuro net.
         /// </summary>
         /// <param name="includeProfile">Whether to include the character profile or not</param>
-        /// <returns></returns>
+        /// <returns>Concacted string of the chat history</returns>
         public string PrintHistory(bool includeProfile = false)
         {
             StringBuilder sb = new();
@@ -109,8 +101,9 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         }
 
         /// <summary>
-        /// If the chat history is requested this will send it as an array, each index represents the character limit of a single message sent to Discord.
-        /// So it will let you submit multiple messages back to back based on each index.
+        /// If the chat history is requested this will send it as an array, each index represents
+        /// the character limit of a single message sent to Discord. so it will let you submit
+        /// multiple messages back to back based on each index.
         /// </summary>
         /// <param name="includeProfile">If you want to include the character profile in the request</param>
         /// <returns>Chat history list sorted by character limit</returns>

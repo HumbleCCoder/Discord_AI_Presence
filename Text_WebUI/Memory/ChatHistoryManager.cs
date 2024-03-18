@@ -94,17 +94,6 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         }
 
         /// <summary>
-        /// Finds the current greetings being used.
-        /// </summary>
-        /// <param name="charProfile">The character profile which contains all greetings.</param>
-        /// <returns>Returns the index value, otherwise -1 if not found.</returns>
-        public int FindGreeting(ProfileData charProfile)
-        {
-            var index = charProfile.AllGreetings.FindIndex(x => x.Equals(ChatHistory[0].Message));
-            return index;
-        }
-
-        /// <summary>
         /// Gets the entire word count of the entire message history including the username.
         /// </summary>
         public int Get_TotalWordCount
@@ -140,6 +129,7 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
 
         /// <summary>
         /// Swap the chat history. Useful for switching to a new channel or reloading data on bot restart.
+        /// Will add it to the program later.
         /// </summary>
         /// <param name="chatHistory">The new chat history</param>
         public void SwapChatHistory(Dictionary<ulong, Memory> chatHistory)

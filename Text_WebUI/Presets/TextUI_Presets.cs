@@ -8,6 +8,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
     {
         public JObject CurPreset { get; set; }
         private readonly string PresetsLocation = $@"{Environment.CurrentDirectory}\TextUI_Files\Preset_Files\";
+        public const string DefaultPreset = "UniversalLight";
         /* Global presets are presets that don't impact the weights of the neuronet.
          * They impact the output after the weights have been set.*/
 
