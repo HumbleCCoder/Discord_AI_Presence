@@ -5,6 +5,7 @@ using Discord_AI_Presence.Text_WebUI.Presets;
 using Discord_AI_Presence.Text_WebUI.ProfileScripts;
 using Newtonsoft.Json;
 using System.Text;
+using UnitTesting;
 
 namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
 {
@@ -48,7 +49,6 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         {
             Presets = new TextUI_Presets();
             Presets.ChangePreset(PresetName);
-            CharacterProfile.ChangeScenario(ScenarioInfo);
             aiFlow = new AiFlow(CharacterProfile, ChannelID);
             //
             Username = Client.GetInstance().FindUsername(ChatStarterUserID);
@@ -62,18 +62,14 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <param name="charProfile">The character profile</param>
         /// <param name="presets">Default preset for the chat</param>
         /// <param name="username">Username who started the chat (so we don't have to call the client constantly. Username is not serialized.</param>
-        public Chats(ulong channelID, ProfileData charProfile, TextUI_Presets.PresetEnum presetName, string username, Scenario.ScenarioPresets scenario, ulong userID, int characterIndex = 0, string customScenario = "")
+        public Chats(ulong channelID, ProfileData charProfile, string username, Scenario.ScenarioPresets scenario, ulong userID, ChatParameters options, int characterIndex = 0)    
         {
             (CharacterProfile) = (charProfile);
             (ChannelID, Username) = (channelID, username);
-            (PresetName, CharacterIndex) = (presetName, characterIndex);
+            CharacterIndex = characterIndex;
             Presets = new TextUI_Presets();
-            Presets.ChangePreset(PresetName);
-            if (!string.IsNullOrEmpty(customScenario))
-                CharacterProfile.ChangeScenario(Scenario.GetScenario(scenario, charProfile.NickOrName(), customScenario));
-            else
-                CharacterProfile.ChangeScenario(Scenario.GetScenario(scenario, charProfile.NickOrName()));
-            ScenarioInfo = CharacterProfile.Scenario;
+            ScenarioInfo = options.ApplyParamData(CharacterProfile.Scenario);
+            PresetName = Presets.SearchByString(options.ApplyParamData(TextUI_Presets.DefaultPreset));
             if (scenario != Scenario.ScenarioPresets.Chatbot)
                 AddMessage(CharacterProfile.NickOrName(), CharacterProfile.CharacterIntroduction, CHARACTER_ID, CHARACTER_ID);
             ChatStarterUserID = userID;

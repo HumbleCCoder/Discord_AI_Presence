@@ -1,5 +1,6 @@
 ﻿using Discord_AI_Presence.Text_WebUI;
 using Discord_AI_Presence.Text_WebUI.DiscordStuff;
+using Discord_AI_Presence.Text_WebUI.Instructions;
 using Discord_AI_Presence.Text_WebUI.MemoryManagement;
 using Discord_AI_Presence.Text_WebUI.Presets;
 
@@ -11,7 +12,10 @@ namespace UnitTesting
         public void HistoryTest()
         {
             TextUI_Servers ser = new(0000000);
-            ser.StartChat(new Chats(0543, TextUI_Base.GetInstance().Cards.First().Value.First(), ser.ServerSettings.DefaultPreset, "BobTheTester", Discord_AI_Presence.Text_WebUI.Instructions.Scenario.ScenarioPresets.Roleplay, 9023));
+            var profile = TextUI_Base.GetInstance().Cards.First().Value.First();
+            ChatParameters cm = new ChatParameters(profile.NickOrName(), "Bob The Tester");
+            ser.StartChat(new Chats(0543, profile, "BobTheTester", 
+                Discord_AI_Presence.Text_WebUI.Instructions.Scenario.ScenarioPresets.Roleplay, 0, cm, 9023));
             var chats = ser.AIChats.Last().Value;
             chats.AddMessage("Test1", "A test is being conducted1", 777, 900);
             chats.AddMessage("Test2", "A test is being conducted2", 778, 901);

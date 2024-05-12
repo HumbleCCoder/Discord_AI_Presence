@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Text;
 
 namespace Discord_AI_Presence.Text_WebUI.Presets
 {
@@ -18,6 +19,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
          */
         public enum PresetEnum
         {
+            Default,
             Asterism,
             BeamSearch,
             BigO,
@@ -45,6 +47,7 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
             Yara
         }
 
+
         public TextUI_Presets()
         {
             ChangePreset(PresetEnum.UniversalLight);
@@ -65,19 +68,29 @@ namespace Discord_AI_Presence.Text_WebUI.Presets
             CurPreset = JsonConvert.DeserializeObject<JObject>(globalPreset.ToString());
         }
 
+        public PresetEnum SearchByString(string preset)
+        {
+            preset = preset.ToLower();
+            var enumData = Enum.GetValues(typeof(PresetEnum));
+            var enumArray = new PresetEnum[enumData.Length];
+            enumData.CopyTo(enumArray, 0);
+            var enumValue = enumArray.FirstOrDefault(x => x.ToString().ToLower().Equals(preset));
+            if (enumValue == PresetEnum.Default)
+                return SearchByString(DefaultPreset);
+            return enumValue;
+        }
+
         /// <summary>
         /// Fetches a json file and returns it as a string
         /// </summary>
         /// <param name="file">The type of Preset File</param>
         /// <param name="returnOnlyLocation">If you only want the file path without the file itself</param>
         /// <returns>Either the path or the contents of the file</returns>
-        private string PresetFiles(PresetEnum file, bool returnOnlyLocation = false)
+        private string PresetFiles(PresetEnum file, bool filePathOnly = false)
         {
-            if (returnOnlyLocation)
-            {
+            if (filePathOnly || !File.Exists($"{PresetsLocation}{file}.json"))
                 return PresetsLocation;
-            }
             return File.ReadAllText($"{PresetsLocation}{file}.json");
-        }        
+        }
     }
 }

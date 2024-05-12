@@ -21,7 +21,8 @@ namespace Discord_AI_Presence.UnitTesting
         TextUI_Servers g = new(serverId);
         private Chats Begin()
         {
-            g.StartChat(new Chats(channelId, characterProfile, g.ServerSettings.DefaultPreset, username, Scenario.ScenarioPresets.Chatbot, chatStarterUserID));
+            ChatParameters cm = new(characterProfile.NickOrName(), message);
+            g.StartChat(new Chats(channelId, characterProfile, username, Scenario.ScenarioPresets.Chatbot, 0, cm, (int)chatStarterUserID));
             return g.AIChats.First().Value;
         }
 

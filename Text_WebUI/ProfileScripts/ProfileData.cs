@@ -10,7 +10,10 @@ using System.Threading.Tasks;
 
 namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
 {
-    public class ProfileData
+    /// <summary>
+    /// Gotta convert this to a value type and make a different class altogether to handle the data of non-profile stuff
+    /// </summary>
+    public struct ProfileData
     {
         #region Json properties
         [JsonProperty("personality")]
@@ -22,7 +25,7 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         public string ExampleDialogue { get; init; }
 
         [JsonProperty("scenario")]
-        public string Scenario { get; set; }
+        public string Scenario { get; init; }
 
         [JsonProperty("name")]
         public string Name { get; init; }
@@ -36,26 +39,8 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         [JsonProperty("avatar")]
         public string AvatarUrl { get; init; }
         [JsonProperty("first_mes")]
-        public string CharacterIntroduction { get; set; }
+        public string CharacterIntroduction { get; init; }
         #endregion        
-
-        /// <summary>
-        /// Copies the class as a new object so the global data is unchanged.
-        /// </summary>
-        /// <param name="originalMessage">The message sent through Discord that summoned the AI</param>
-        /// <param name="preset">The preset data as a reference to be set here.</param>
-        /// <returns>A copy of the requested Character Profile data</returns>
-        public ProfileData GetNewInstance(string originalMessage, ref string preset)
-        {
-            // scenario, preset, firstmes
-            var parameters = new ChatParameters(NickOrName(), originalMessage);
-            var jObj = JsonConvert.SerializeObject(this);
-            var newObj = JsonConvert.DeserializeObject<ProfileData>(jObj);
-            newObj.Scenario = parameters.ApplyParamData(Scenario);
-            preset = parameters.ApplyParamData(preset);
-            newObj.CharacterIntroduction = parameters.ApplyParamData(CharacterIntroduction);
-            return newObj;
-        }
 
         /// <summary>
         /// Prints out the value of all non-null or empty properties from the character profile.
@@ -89,20 +74,9 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
             return CharacterNickName ?? Name;
         }
 
-        /// <summary>
-        /// Simply changes the scenario.
-        /// </summary>
-        /// <param name="scenario">The scenario</param>
-        public void ChangeScenario(string scenario)
-        {
-            Scenario = scenario;
-        }
-
         // Any property not set as init needs a constructor for the Json to load the data.
-        [JsonConstructor]
-        private ProfileData(string Scenario, string CharacterIntroduction)
+        public ProfileData()
         {
-            this.Scenario = Scenario;
         }
     }
 }

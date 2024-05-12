@@ -31,12 +31,20 @@
             Array.Sort(parameters, (c1, c2) => c1.positionInList.CompareTo(c2.positionInList));
         }
 
+        /// <summary>
+        /// Simply returns the profile data. If no custom parameter was found it returns the default on the character profile
+        /// This method automatically increments the parameters in this order: Scenario, Preset, First Message
+        /// </summary>
+        /// <param name="charProfileData">The character profile string that's relevant to the search.</param>
+        /// <returns>Custom data or the default if no custom data exists.</returns>
         public string ApplyParamData(string charProfileData)
         {
+            if (indexLocation >= parameters.Length)
+                return charProfileData;
             // scenario, preset, firstmes
             var paramData = GetParamData(parameterDefs[indexLocation]);
             indexLocation++;
-            if(paramData == string.Empty)
+            if(string.IsNullOrEmpty(paramData))
             {
                 return charProfileData;
             }

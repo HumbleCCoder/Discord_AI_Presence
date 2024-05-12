@@ -4,6 +4,7 @@ using Discord_AI_Presence.Text_WebUI.MemoryManagement;
 using Discord_AI_Presence.Text_WebUI.TextWebUI;
 using Discord_AI_Presence.Text_WebUI.ProfileScripts;
 using Discord_AI_Presence.Text_WebUI.Presets;
+using Discord_AI_Presence.Text_WebUI.Instructions;
 namespace Discord_AI_Presence.UnitTesting
 {
     internal class NeuroNetTesting
@@ -20,7 +21,8 @@ namespace Discord_AI_Presence.UnitTesting
         public async Task SubmitToNeuroNet()
         {
             var server = new TextUI_Servers(serverId);
-            server.StartChat(new Chats(channelId, characterProfile, TextUI_Presets.PresetEnum.Mirostat, username, Text_WebUI.Instructions.Scenario.ScenarioPresets.Chatbot, chatStarterUserID));
+            ChatParameters cm = new(characterProfile.NickOrName(), message);
+            server.StartChat(new Chats(channelId, characterProfile, username, Text_WebUI.Instructions.Scenario.ScenarioPresets.Chatbot, 12345, cm, (int)chatStarterUserID));
             server.AIChats.First().Value.AddMessage(username, message, chatStarterUserID, msgID);
             var result = await Connection.PostMessage(characterProfile, server, server.AIChats.First().Value, server.AIChats.First().Value.Participants());
             Assert.That(result, Is.Not.Null);

@@ -22,6 +22,9 @@ namespace Discord_AI_Presence.Text_WebUI
         /// </summary>
         [JsonProperty]
         public Dictionary<ulong, TextUI_Servers> ServerData { get; init; } = [];
+        /// <summary>
+        /// The key is the character name
+        /// </summary>
         public Dictionary<string, List<ProfileData>> Cards { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, Buttons> DuplicateHandling { get; init; } = [];
         public Queues NeuroNetCalls { get; init; } = new();
@@ -64,16 +67,15 @@ namespace Discord_AI_Presence.Text_WebUI
                 }
                 if (!Cards.TryGetValue(characterName, out var profile))
                     return;
-                var newCharacterJObj = JsonConvert.SerializeObject(profile[index]);
-                var newCharacter = JsonConvert.DeserializeObject<ProfileData>(newCharacterJObj);
+                var newCharacter = profile[index];
                 var chatParameters = new ChatParameters(newCharacter.NickOrName(), scc.Message.Content);
                 var chatSettings = new MemoryManagement.Chats(
                     scc.Channel.Id,
                     profile[index],
-                    server.ServerSettings.DefaultPreset,
                     scc.User.GlobalName ?? scc.User.Username,
-                    Scenario.ScenarioPresets.Chatbot,
+                    Scenario.ScenarioPresets.Chatbot,                    
                     scc.User.Id,
+                    chatParameters,
                     index
                 );
 
@@ -95,19 +97,22 @@ namespace Discord_AI_Presence.Text_WebUI
         /// <param name="profile">The character profile</param>
         /// <param name="index">Index is necessary if there are more than one character with the same name. Can leave at 0 in most cases it's handled automatically.</param>
         /// <returns></returns> 
-        public async Task StartChat(ulong guildId, ulong channelId, ulong userId, ProfileData profile, int index, Scenario.ScenarioPresets convoType)
-        {
+        public async Task StartChat(SocketMessageComponent smc, ProfileData profile, int index, Scenario.ScenarioPresets convoType)
+        {            
+            var channelId = (ulong)smc.ChannelId;
+            var guildId = (ulong)smc.GuildId;
             var server = ServerData[guildId];
-
+            var userId = (ulong)smc.User.Id;
+            ChatParameters cm = new(profile.NickOrName(), smc.Message.Content);
             if (server.ServerSettings.NoAIChannels.Contains(channelId))
                 return;
             var chatSettings = new MemoryManagement.Chats(
                 channelId,
                 profile,
-                server.ServerSettings.DefaultPreset,
-                profile.NickOrName(),
+                smc.User.Username,
                 convoType,
                 userId,
+                cm,
                 index
             );
 
@@ -116,33 +121,6 @@ namespace Discord_AI_Presence.Text_WebUI
             await Webhooks.SendWebhookMessage(Client.GetInstance().FindGuild(guildId), profile, server.ServerSettings, profile.CharacterIntroduction, channelId);
         }
 
-
-        /// <summary>
-        /// Starts a roleplay chat with a custom scenario.
-        /// </summary>
-        /// <param name="scc">The socket command context assigned whenever a message is received on Discord.</param>
-        /// <param name="characterName">The character name</param>
-        /// <param name="index">Index is necessary if there are more than one character with the same name. Can leave at 0 in most cases it's handled automatically.</param>
-        /// <param name="customScenario">If no custom scenario specified, it will default to roleplay default.</param>
-        public async Task StartChat(SocketCommandContext scc, string characterName, int index = 0, string customScenario = "")
-        {
-            var server = ServerData[scc.Guild.Id];
-
-            if (server == null || server.ServerSettings.NoAIChannels.Contains(scc.Channel.Id) || server.AiChatExists(scc.Channel.Id))
-                return;
-
-            if (!Cards.TryGetValue(characterName, out var profile))
-                return;
-
-            var preset = server.ServerSettings.DefaultPreset;
-            var scenario = string.IsNullOrEmpty(customScenario)
-                ? Scenario.ScenarioPresets.Roleplay
-                : Scenario.ScenarioPresets.Default;
-
-            server.StartChat(new MemoryManagement.Chats(scc.Channel.Id, profile[index], preset, characterName, scenario, scc.User.Id, index, customScenario));
-
-            await Webhooks.SendWebhookMessage(scc.Guild, profile[index], server.ServerSettings, profile[index].CharacterIntroduction, scc.Channel.Id);
-        }
 
         [JsonConstructor]
         public TextUI_Base(Dictionary<ulong, TextUI_Servers> ServerData)
@@ -216,7 +194,7 @@ namespace Discord_AI_Presence.Text_WebUI
                  * This finds cards like this and simply reassigns it as a JArray to get past the null exception.
                  */
                 dynamic jsonObj = JsonConvert.DeserializeObject(fileData);
-                ProfileData jsonData = null;
+                ProfileData jsonData;
 
                 if (jsonObj.alternate_greetings != null)
                 {
