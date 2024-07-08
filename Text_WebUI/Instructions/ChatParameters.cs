@@ -15,6 +15,19 @@
         private readonly Container[] parameters = new Container[paramDefLength];
         private int indexLocation = 0;
 
+        public static string ExtractCharacterName(string text)
+        {
+            var newTxt = text;
+            newTxt = newTxt.Split(new string[] 
+            {
+                parameterDefs[0],
+                parameterDefs[1],
+                parameterDefs[2]
+            }, 
+            StringSplitOptions.RemoveEmptyEntries)[0];
+            return newTxt;
+        }
+
         /// <summary>
         /// Used to extract definitions to populate a custom scenario, preset or first message from a chat message
         /// rather than relying on slash commands or clunky bot commands, this can feel more natural.

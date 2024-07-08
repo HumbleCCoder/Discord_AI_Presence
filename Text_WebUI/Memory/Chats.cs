@@ -45,11 +45,12 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// To reload the required data after data persistance is added.
         /// </summary>
         [JsonConstructor]
-        private Chats()
+        private Chats(ProfileData characterProfile)
         {
             Presets = new TextUI_Presets();
             Presets.ChangePreset(PresetName);
             aiFlow = new AiFlow(CharacterProfile, ChannelID);
+            CharacterProfile = characterProfile;
             //
             Username = Client.GetInstance().FindUsername(ChatStarterUserID);
         }
@@ -63,17 +64,18 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
         /// <param name="presets">Default preset for the chat</param>
         /// <param name="username">Username who started the chat (so we don't have to call the client constantly. Username is not serialized.</param>
         public Chats(ulong channelID, ProfileData charProfile, string username, Scenario.ScenarioPresets scenario, ulong userID, ChatParameters options, int characterIndex = 0)    
-        {
-            (CharacterProfile) = (charProfile);
+        {            
             (ChannelID, Username) = (channelID, username);
             CharacterIndex = characterIndex;
             Presets = new TextUI_Presets();
-            ScenarioInfo = options.ApplyParamData(CharacterProfile.Scenario);
+            charProfile.Scenario = options.ApplyParamData(charProfile.Scenario);
             PresetName = Presets.SearchByString(options.ApplyParamData(TextUI_Presets.DefaultPreset));
+            charProfile.CharacterIntroduction = options.ApplyParamData(charProfile.CharacterIntroduction);
             if (scenario != Scenario.ScenarioPresets.Chatbot)
-                AddMessage(CharacterProfile.NickOrName(), CharacterProfile.CharacterIntroduction, CHARACTER_ID, CHARACTER_ID);
+                AddMessage(charProfile.NickOrName(), charProfile.CharacterIntroduction, CHARACTER_ID, CHARACTER_ID);
             ChatStarterUserID = userID;
             aiFlow = new AiFlow(CharacterProfile, ChannelID);
+            (CharacterProfile) = (charProfile);
         }
 
 

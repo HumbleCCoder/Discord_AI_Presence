@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
+using Discord_AI_Presence.DebugThings;
 using Discord_AI_Presence.Text_WebUI.Button_Related;
 using Discord_AI_Presence.Text_WebUI.DiscordStuff;
 using Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework;
@@ -73,14 +74,14 @@ namespace Discord_AI_Presence.Text_WebUI
                     scc.Channel.Id,
                     profile[index],
                     scc.User.GlobalName ?? scc.User.Username,
-                    Scenario.ScenarioPresets.Chatbot,                    
+                    Scenario.ScenarioPresets.Chatbot,
                     scc.User.Id,
                     chatParameters,
                     index
                 );
-
-                server.StartChat(chatSettings);
-                await Webhooks.SendWebhookMessage(scc.Guild, profile[index], server.ServerSettings, profile[index].CharacterIntroduction, scc.Channel.Id);
+                var g = server.StartChat(chatSettings);
+                if (g != null)
+                    await Webhooks.SendWebhookMessage(scc.Guild, g.CharacterProfile, server.ServerSettings, g.CharacterProfile.CharacterIntroduction, scc.Channel.Id);
             }
             catch (Exception m)
             {
@@ -98,7 +99,7 @@ namespace Discord_AI_Presence.Text_WebUI
         /// <param name="index">Index is necessary if there are more than one character with the same name. Can leave at 0 in most cases it's handled automatically.</param>
         /// <returns></returns> 
         public async Task StartChat(SocketMessageComponent smc, ProfileData profile, int index, Scenario.ScenarioPresets convoType)
-        {            
+        {
             var channelId = (ulong)smc.ChannelId;
             var guildId = (ulong)smc.GuildId;
             var server = ServerData[guildId];
@@ -228,6 +229,15 @@ namespace Discord_AI_Presence.Text_WebUI
         /// <returns>Null if character is not found, otherwise the character profile</returns>
         public List<ProfileData> Check(string msg, bool chatExists)
         {
+            foreach (var g in Cards)
+            {
+                g.Key.Dump();
+                foreach (var x in g.Value)
+                {
+                    x.Name.Dump();
+                }
+            }
+            msg = ChatParameters.ExtractCharacterName(msg);
             if (string.IsNullOrEmpty(msg))
                 return null;
             var first = msg.Split(' ')[0]; // Makes sure Hey must appear at the beginning of the message to trigger it

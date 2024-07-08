@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Discord_AI_Presence.DebugThings;
 using Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework;
 using Discord_AI_Presence.Text_WebUI.ProfileScripts;
 using System;
@@ -36,13 +37,17 @@ namespace Discord_AI_Presence.Text_WebUI.AiRelated
         /// <returns></returns>
         internal async Task<bool> SendAiChat(string msg, SocketCommandContext scc)
         {
+            "9".Dump();
             if (_wordTriggers.Contains(msg))
                 return true;
+            "10".Dump();
             if (_replyMax-- >= _msgAmt)
                 return false;
+            "11".Dump();
             var randomNum = Extensions.ReturnRandom(MinValue, MaxValue);
             if (randomNum < _replyMax)
                 return false;
+            "12".Dump();
             NewMsgAmt();
             var serverSettings = TextUI_Base.GetInstance().ServerData[scc.Guild.Id].ServerSettings;
             var webhook = TextUI_Base.GetInstance().Webhooks;

@@ -25,7 +25,7 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         public string ExampleDialogue { get; init; }
 
         [JsonProperty("scenario")]
-        public string Scenario { get; init; }
+        public string Scenario { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; init; }
@@ -39,7 +39,7 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         [JsonProperty("avatar")]
         public string AvatarUrl { get; init; }
         [JsonProperty("first_mes")]
-        public string CharacterIntroduction { get; init; }
+        public string CharacterIntroduction { get; set; }
         #endregion        
 
         /// <summary>
@@ -75,8 +75,7 @@ namespace Discord_AI_Presence.Text_WebUI.ProfileScripts
         }
 
         // Any property not set as init needs a constructor for the Json to load the data.
-        public ProfileData()
-        {
-        }
+        public ProfileData(string characterIntro, string scene) =>
+            (CharacterIntroduction, Scenario) = (characterIntro, scene);
     }
 }

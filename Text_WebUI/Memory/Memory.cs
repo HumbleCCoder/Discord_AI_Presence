@@ -1,4 +1,6 @@
-﻿namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
+﻿using System.Text.RegularExpressions;
+
+namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
 {
     /// <summary>
     /// The struct is mostly readonly. A struct is used because of how frequently messages will be created when one or many chat sessions are going on
@@ -38,6 +40,6 @@
         /// </summary>
         /// <param name="message">The message to compare. The comparison is not case sensitive.</param>
         /// <returns>Returns true if found.</returns>
-        public readonly bool IsMessage(string message) => Message.Equals(message, StringComparison.OrdinalIgnoreCase);
+        public readonly bool IsMessage(string message) => Message.Equals(message, StringComparison.OrdinalIgnoreCase);        
     }
 }

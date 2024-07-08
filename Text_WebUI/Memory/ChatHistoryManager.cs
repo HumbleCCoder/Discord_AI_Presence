@@ -151,6 +151,9 @@ namespace Discord_AI_Presence.Text_WebUI.MemoryManagement
                 if (!AllowMemorySubmission(message, serverSettings.BotCommandTrigger))
                     return;
             }
+            message = message.CleanMessage();
+            if (string.IsNullOrEmpty(message))
+                return;
             ChatHistory.Add(msgID, new Memory(message, username, userID));
         }
 

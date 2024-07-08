@@ -64,11 +64,12 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff
         }
 
 
-        public void StartChat(Chats chat)
+        public Chats StartChat(Chats chat)
         {
-            if (AIChats.ContainsKey(chat.ChannelID))
-                return;
+            if (AIChats.TryGetValue(chat.ChannelID, out var curChat))
+                return curChat;
             AIChats.Add(chat.ChannelID, chat);
+            return AIChats[chat.ChannelID];
         }
 
         public bool EndChat(ulong channelID, bool end)

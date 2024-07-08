@@ -101,59 +101,69 @@ namespace Discord_AI_Presence.Text_WebUI.DiscordStuff.API_Framework
          */
         private async Task MessageReceived(SocketMessage MessageParam)
         {
-            _message = MessageParam as SocketUserMessage;
-            if (_message == null || _message.Author.IsBot)
-                return;
-
-            _context = new SocketCommandContext(_client, _message);
-            var instance = TextUI_Base.GetInstance();
-            var serverData = instance.ServerData[_context.Guild.Id];
-            List<ProfileData> aiProfile = [];
-            // If allowed, will randomly return an AI for the user to talk to. Uses keyword "ranai". The chat must equal only that word.
-            if (!serverData.AIChats.TryGetValue(_message.Channel.Id, out var chats))
+            "1".Dump();
+            try
             {
-                // Don't want to shuffle around the array every time a message is received
-                List<ProfileData> cardsShuffled = null;
-                if (serverData.ServerSettings.AllowRandomAIOccurance || _message.Content.Equals("ranai", StringComparison.OrdinalIgnoreCase))
-                {
-                    var random = ReturnRandom(0, 500) > 498;
-                    cardsShuffled = (List<ProfileData>)Shuffle(instance.Cards.Values.ToList());
-                    aiProfile.Add(cardsShuffled[ReturnRandom(0, cardsShuffled.Count)]);
-                }
-            }
-            if (aiProfile.Count > 0)
-                aiProfile = instance.Check(_message.Content, chats == null);
-
-            // Automatically end a chat if it's time to go.
-            // If it didn't find any AI in the check, disregard
-            if (serverData.EndChat(_context.Channel.Id, DiscordMessageHistory.ShouldEndChat(_message)) || aiProfile == null)
-                return;
-
-            // Send an AI reply if the conditions are met.
-            if (chats == null || await chats.aiFlow.SendAiChat(_message.Content, _context))
-                return;
-
-            /* Multiple characters with the same name is handled here.
-             * It will generate a "next" and "submit" button to let the user cycle through characters
-             * and view them by their profile picture then click submit to choose.
-             */
-            if (aiProfile.Count > 1)
-            {
-                if (serverData.DuplicateHandling.ContainsKey(_message.Channel.Id))
+                _message = MessageParam as SocketUserMessage;
+                if (_message == null || _message.Author.IsBot)
                     return;
+                "2".Dump();
+                _context = new SocketCommandContext(_client, _message);
+                var instance = TextUI_Base.GetInstance();
+                var serverData = instance.ServerData[_context.Guild.Id];
+                List<ProfileData> aiProfile = [];
+                // If allowed, will randomly return an AI for the user to talk to. Uses keyword "ranai". The chat must equal only that word.
+                if (!serverData.AIChats.TryGetValue(_message.Channel.Id, out var chats))
+                {
+                    "3".Dump();
+                    // Don't want to shuffle around the array every time a message is received
+                    List<ProfileData> cardsShuffled = null;
+                    if (serverData.ServerSettings.AllowRandomAIOccurance || _message.Content.Equals("ranai", StringComparison.OrdinalIgnoreCase))
+                    {
+                        "4".Dump();
+                        var random = ReturnRandom(0, 500) > 498;
+                        cardsShuffled = (List<ProfileData>)Shuffle(instance.Cards.Values.ToList());
+                        aiProfile.Add(cardsShuffled[ReturnRandom(0, cardsShuffled.Count)]);
+                    }
+                    "5".Dump();
+                }
+                if (aiProfile.Count == 0)
+                    aiProfile = instance.Check(_message.Content, chats == null);
+                "6".Dump();
+                // Automatically end a chat if it's time to go.
+                // If it didn't find any AI in the check, disregard
+                if (serverData.EndChat(_context.Channel.Id, DiscordMessageHistory.ShouldEndChat(_message)) || aiProfile == null)
+                    return;
+                "7".Dump();
+                // Send an AI reply if the conditions are met.
+                if (chats != null)
+                    await chats.aiFlow.SendAiChat(_message.Content, _context);
+                /* Multiple characters with the same name is handled here.
+                 * It will generate a "next" and "submit" button to let the user cycle through characters
+                 * and view them by their profile picture then click submit to choose.
+                 */
+                if (aiProfile.Count > 1)
+                {
+                    if (serverData.DuplicateHandling.ContainsKey(_message.Channel.Id))
+                        return;
+                    var starterId = _message.Author.Id;
+                    var botMsg = await _context.Channel.SendMessageAsync("There are multiple characters. Please pick one.");
+                    bool serverChannelType = serverData.ServerSettings.DedicatedAIChannels.Exists(x => x == _context.Channel.Id);
 
-                var starterId = _message.Author.Id;
-                var botMsg = await _context.Channel.SendMessageAsync("There are multiple characters. Please pick one.");
-                bool serverChannelType = serverData.ServerSettings.DedicatedAIChannels.Exists(x => x == _context.Channel.Id);
-
-                // Only dedicated channels can be a roleplay or custom scenario, otherwise always pick chatbot.
-                var scenarioType = serverChannelType ? Scenario.ScenarioPresets.Roleplay : Scenario.ScenarioPresets.Chatbot;
-                serverData.DuplicateHandling.Add(_context.Channel.Id, new Button_Related.ButtonHandling(aiProfile, botMsg, starterId, scenarioType));
-                await serverData.DuplicateHandling.Last().Value.SwapMessage();
-                return;
+                    // Only dedicated channels can be a roleplay or custom scenario, otherwise always pick chatbot.
+                    var scenarioType = serverChannelType ? Scenario.ScenarioPresets.Roleplay : Scenario.ScenarioPresets.Chatbot;
+                    serverData.DuplicateHandling.Add(_context.Channel.Id, new Button_Related.ButtonHandling(aiProfile, botMsg, starterId, scenarioType));
+                    await serverData.DuplicateHandling.Last().Value.SwapMessage();
+                    return;
+                }
+                // If a new chat is not started but it detects a current AI chat in progress, it will add to the chat memory instead.
+                await TextUI_Base.GetInstance().StartChat(_context, aiProfile[0].NickOrName(), 0);
             }
-            // If a new chat is not started but it detects a current AI chat in progress, it will add to the chat memory instead.
-            await TextUI_Base.GetInstance().StartChat(_context, aiProfile[0].NickOrName(), 0);
+            catch (Exception n)
+            {
+                DebugExtensions.Log(n);
+                throw;
+            }
         }
     }
 }

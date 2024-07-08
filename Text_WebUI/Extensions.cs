@@ -13,6 +13,28 @@ namespace Discord_AI_Presence
         private static readonly Regex WhitelistRegex = MyRegex();
 
         /// <summary>
+        /// Removes all URLs and custom server emojis from the message
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static string CleanMessage(this string message)
+        {
+            message = message.CleanURL();
+            message = message.RemoveEmojis();
+            return message;
+        }
+
+        /// <summary>
+        /// Checks if it contains a URL or Emoji. Might not be necessary
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static bool ContainsURLOrEmoji(string message)
+        {
+            return HasEmoji(message) || HasURL(message);
+        }
+
+        /// <summary>
         /// White list to make sure a filename submitted is not attempting a path traversal attack.
         /// </summary>
         /// <param name="filename">the filename</param>
@@ -52,5 +74,44 @@ namespace Discord_AI_Presence
             double randomValue = random.NextDouble();
             return randomValue < rarityThreshold;
         }
+
+        /* Having URLs or custom server emojis seems to bug the AI making them spit out garbage forever until the message is erased or the chat is restarted
+         As a result we have to make sure none of it enters the neuro net.
+         */
+        #region Regex Checks
+
+        private static string CleanURL(this string message)
+        {
+            string pattern = @"(http|https)[^\s/$.?#].[^\s]*";
+            Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+            return Regex.Replace(message, pattern, string.Empty).Replace("  ", " "); ;
+        }
+
+        private static string RemoveEmojis(this string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return string.Empty;
+            string pattern = @"<@\d+>|<@!\d+>|:\w+:|<:[^:]+:\d+>";
+            return Regex.Replace(message, pattern, string.Empty).Replace("  ", " ");
+        }
+
+        private static bool HasEmoji(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return false;
+            string pattern = @"<@\d+>|<@!\d+>|:\w+:|<:[^:]+:\d+>";
+            return Regex.IsMatch(message, pattern);
+        }
+
+        private static bool HasURL(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return false;
+            string pattern = @"(http|https)[^\s/$.?#].[^\s]*";
+            Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+            return Regex.IsMatch(message, pattern);
+        }
+        #endregion
+
     }
 }
